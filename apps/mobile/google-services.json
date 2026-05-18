@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "828177638739",
+    "project_id": "roadsos-svvv",
+    "storage_bucket": "roadsos-svvv.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:828177638739:android:e6709e93a0ab010561ada6",
+        "android_client_info": {
+          "package_name": "com.roadsos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw1JBzLDmSwR0ED7wr4eHJBsZdqJgS3lE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

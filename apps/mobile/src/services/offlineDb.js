@@ -1,4 +1,4 @@
-import * as SQLite from "expo-sqlite";
+import * as SQLite from "expo-sqlite/legacy";
 
 const db = SQLite.openDatabase("roadsos.db");
 
@@ -40,4 +40,18 @@ export function runSql(sql, params = []) {
       );
     });
   });
+}
+
+export async function setMeta(key, value) {
+  await runSql("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?);", [key, value]);
+}
+
+export async function getMeta(key) {
+  const result = await runSql("SELECT value FROM meta WHERE key = ?;", [key]);
+  return result.rows._array?.[0]?.value || null;
+}
+
+export async function getAllMeta() {
+  const result = await runSql("SELECT key, value FROM meta;");
+  return result.rows._array || [];
 }

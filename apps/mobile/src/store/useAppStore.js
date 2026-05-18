@@ -4,8 +4,11 @@ export const useAppStore = create((set) => ({
   currentCountry: "TH",
   offlineMode: false,
   lastSyncByCategory: {},
+  lastGeofenceSync: null,
   contactsByCategory: {},
   borderGeofences: [],
+  borderStatus: { inBuffer: false, nextCountry: null },
+  lastKnownLocation: null,
   setCurrentCountry: (country) => set({ currentCountry: country }),
   setOfflineMode: (offlineMode) => set({ offlineMode }),
   setContacts: (category, contacts, lastSyncedAt) =>
@@ -19,5 +22,9 @@ export const useAppStore = create((set) => ({
         [category]: lastSyncedAt || state.lastSyncByCategory[category]
       }
     })),
-  setBorderGeofences: (borderGeofences) => set({ borderGeofences })
+  setLastSyncByCategory: (lastSyncByCategory) => set({ lastSyncByCategory }),
+  setBorderGeofences: (borderGeofences) => set({ borderGeofences }),
+  setLastGeofenceSync: (lastGeofenceSync) => set({ lastGeofenceSync }),
+  setBorderStatus: (borderStatus) => set({ borderStatus }),
+  setLastKnownLocation: (lastKnownLocation) => set({ lastKnownLocation })
 }));

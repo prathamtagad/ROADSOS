@@ -15,5 +15,10 @@
     "emulators": "npm --prefix firebase run emulators",
     "functions:serve": "npm --prefix firebase run serve",
     "functions:deploy": "npm --prefix firebase run deploy"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~3.2.3",
+    "react-dom": "18.2.0",
+    "react-native-web": "~0.19.10"
   }
 }

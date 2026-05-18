@@ -1,87 +1,395 @@
-import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import React, { useCallback, useMemo, useRef } from "react";
+import { View, Text, Pressable, StyleSheet, ScrollView, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons";
+import MapView, { Marker } from "react-native-maps";
+import TopAppBar from "../components/TopAppBar";
+import BottomNav from "../components/BottomNav";
+import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
+import { useAppStore } from "../store/useAppStore";
+import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
+
+const MAP_IMAGE =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuCD1zNC-miAasZEccCH4z-mhNgC3jIFdcwPi-VXxcOv2vfl5PHy43P8bCCan4Km4DHYqIkA8UqI0b-vuwmyiI_jhD1nVss-N4_vIFNsXaokGsOW_Q6GCP-zdWNmhgCxA1oiJUVrsdVJb7d6cvCSiKR2tDBiZh5pvPOlERfgOP_IPniPq_EA8XAk6ONhgkCzVAfYTT-eqgxqMn0DvtnVdXXSrSWcROksJvXd7Skb7fAahwPclg68ZEHsQrUxXfnj5KrVfJ7hhMOvB_V0";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  const currentCountry = useAppStore((state) => state.currentCountry);
+  const lastKnownLocation = useAppStore((state) => state.lastKnownLocation);
+  const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
+  const tapStateRef = useRef({ count: 0, resetTimer: null, navTimer: null });
+
+  const mapRegion = useMemo(() => {
+    if (!lastKnownLocation) {
+      return {
+        latitude: 13.7563,
+        longitude: 100.5018,
+        latitudeDelta: 0.08,
+        longitudeDelta: 0.08
+      };
+    }
+
+    return {
+      latitude: lastKnownLocation.lat,
+      longitude: lastKnownLocation.lng,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02
+    };
+  }, [lastKnownLocation]);
+
+  const resetTapState = useCallback(() => {
+    const tapState = tapStateRef.current;
+    if (tapState.resetTimer) {
+      clearTimeout(tapState.resetTimer);
+    }
+    if (tapState.navTimer) {
+      clearTimeout(tapState.navTimer);
+    }
+    tapState.count = 0;
+    tapState.resetTimer = null;
+    tapState.navTimer = null;
+  }, []);
+
+  const handleSosPress = useCallback(() => {
+    const tapState = tapStateRef.current;
+    tapState.count += 1;
+
+    if (tapState.count === 1) {
+      tapState.navTimer = setTimeout(() => {
+        navigation.navigate("EmergencyMode");
+        resetTapState();
+      }, 350);
+      tapState.resetTimer = setTimeout(() => {
+        resetTapState();
+      }, 700);
+      return;
+    }
+
+    if (tapState.count >= 3) {
+      if (tapState.navTimer) {
+        clearTimeout(tapState.navTimer);
+      }
+      resetTapState();
+      navigation.navigate("EmergencyMode", { immediate: true });
+    }
+  }, [navigation, resetTapState]);
+
+  const handleSosLongPress = useCallback(() => {
+    resetTapState();
+    navigation.navigate("EmergencyMode", { immediate: true });
+  }, [navigation, resetTapState]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>ROADSOS</Text>
-      <Text style={styles.subtitle}>Emergency and road assist</Text>
+    <View style={styles.screen}>
+      <SafeAreaView edges={["top"]} style={styles.safeTop}>
+        <TopAppBar title={`${countryName} Status: Clear`} />
+      </SafeAreaView>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.statusBanner}>
+          <View style={styles.statusLeft}>
+            <View style={styles.flagBadge}>
+              <Text style={styles.flagText}>{currentCountry}</Text>
+            </View>
+            <Text style={styles.statusText}>{`${countryName.toUpperCase()} | BORDER MODE ACTIVE`}</Text>
+          </View>
+          <MaterialIcons name="gps-fixed" size={22} color={Colors.safeGreen} />
+        </View>
 
-      <Pressable
-        style={[styles.primaryButton, styles.sosButton]}
-        onPress={() => navigation.navigate("EmergencyMode")}
-      >
-        <Text style={styles.primaryButtonText}>SOS</Text>
-      </Pressable>
+        <View style={styles.sosSection}>
+          <View style={styles.sosWrapper}>
+            <View style={styles.rippleOuter} />
+            <View style={styles.rippleInner} />
+            <Pressable
+              onPress={handleSosPress}
+              onLongPress={handleSosLongPress}
+              delayLongPress={3000}
+              style={({ pressed }) => [styles.sosButton, pressed && styles.sosPressed]}
+            >
+              <MaterialIcons name="warning" size={56} color={Colors.onPrimary} />
+              <Text style={styles.sosText}>SOS</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.sosHint}>HOLD FOR 3S OR TRIPLE TAP</Text>
+        </View>
 
-      <Pressable
-        style={[styles.primaryButton, styles.breakdownButton]}
-        onPress={() => navigation.navigate("RoadAssist")}
-      >
-        <Text style={styles.primaryButtonText}>Breakdown</Text>
-      </Pressable>
+        <Pressable
+          onPress={() => navigation.navigate("RoadAssist")}
+          style={({ pressed }) => [styles.assistButton, pressed && styles.assistPressed]}
+        >
+          <MaterialIcons name="build" size={28} color={Colors.onSurface} />
+          <Text style={styles.assistText}>ROAD ASSIST</Text>
+        </Pressable>
 
-      <Pressable
-        style={styles.secondaryButton}
-        onPress={() => navigation.navigate("TouristEmergencyCard")}
-      >
-        <Text style={styles.secondaryButtonText}>Tourist Emergency Card</Text>
-      </Pressable>
+        <View style={styles.quickGrid}>
+          <View style={styles.quickCard}>
+            <View style={[styles.iconBox, { backgroundColor: Colors.infoBlue }]}>
+              <MaterialIcons name="local-hospital" size={20} color={Colors.onPrimary} />
+            </View>
+            <View style={styles.quickBody}>
+              <Text style={styles.quickLabel}>NEAREST HOSPITAL</Text>
+              <Text style={styles.quickValue}>Bangkok Int. (1.2km)</Text>
+              <View style={styles.quickMeta}>
+                <MaterialIcons name="navigation" size={14} color={Colors.infoBlue} />
+                <Text style={styles.quickMetaText}>EST. 4 MINS</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.quickCard}>
+            <View style={[styles.iconBox, { backgroundColor: Colors.tertiary }]}>
+              <MaterialIcons name="local-police" size={20} color={Colors.onPrimary} />
+            </View>
+            <View style={styles.quickBody}>
+              <Text style={styles.quickLabel}>NEAREST POLICE</Text>
+              <Text style={styles.quickValue}>Station North (2.5km)</Text>
+              <View style={styles.quickMeta}>
+                <MaterialIcons name="call" size={14} color={Colors.tertiary} />
+                <Text style={styles.quickMetaText}>DIRECT LINE READY</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <Pressable style={styles.mapPreview} onPress={() => navigation.navigate("Map")}
+        >
+          {lastKnownLocation ? (
+            <MapView
+              style={styles.mapImage}
+              pointerEvents="none"
+              initialRegion={mapRegion}
+              region={mapRegion}
+              showsUserLocation
+              showsMyLocationButton={false}
+            >
+              <Marker
+                coordinate={{
+                  latitude: lastKnownLocation.lat,
+                  longitude: lastKnownLocation.lng
+                }}
+                title="You"
+              />
+            </MapView>
+          ) : (
+            <Image source={{ uri: MAP_IMAGE }} style={styles.mapImage} />
+          )}
+          <View style={styles.mapOverlay} />
+          <View style={styles.mapPin}>
+            <MaterialIcons name="location-on" size={36} color={Colors.emergencyRed} />
+          </View>
+          <View style={styles.mapHint}>
+            <Text style={styles.mapHintText}>Tap for Live Map</Text>
+          </View>
+        </Pressable>
+      </ScrollView>
+      <SafeAreaView edges={["bottom"]} style={styles.safeBottom}>
+        <BottomNav activeKey="sos" />
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+    backgroundColor: Colors.surface
+  },
+  safeTop: {
+    backgroundColor: Colors.surface
+  },
+  safeBottom: {
+    backgroundColor: Colors.surface
+  },
+  scroll: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: 120
+  },
+  statusBanner: {
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.inverseSurface,
+    padding: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-    backgroundColor: "#f6f6f8"
+    justifyContent: "space-between",
+    ...Shadows.hard
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6b7280",
-    marginBottom: 28
-  },
-  primaryButton: {
-    width: "100%",
-    paddingVertical: 16,
-    borderRadius: 14,
+  statusLeft: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 14
+    gap: Spacing.sm
+  },
+  flagBadge: {
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radii.sm
+  },
+  flagText: {
+    fontWeight: "800",
+    color: Colors.onSurface
+  },
+  statusText: {
+    color: Colors.inverseOnSurface,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.6
+  },
+  sosSection: {
+    marginTop: Spacing.xxl,
+    alignItems: "center"
+  },
+  sosWrapper: {
+    width: 240,
+    height: 240,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  rippleOuter: {
+    position: "absolute",
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    borderWidth: 4,
+    borderColor: Colors.emergencyRed,
+    opacity: 0.5
+  },
+  rippleInner: {
+    position: "absolute",
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    borderWidth: 2,
+    borderColor: Colors.emergencyRed,
+    opacity: 0.2
   },
   sosButton: {
-    backgroundColor: "#d72638"
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: Colors.emergencyRed,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: Colors.onSurface,
+    ...Shadows.hardLg
   },
-  breakdownButton: {
-    backgroundColor: "#0f766e"
+  sosPressed: {
+    transform: [{ scale: 0.96 }]
   },
-  primaryButtonText: {
-    color: "#ffffff",
+  sosText: {
+    fontSize: 40,
+    fontWeight: "800",
+    color: Colors.onPrimary,
+    marginTop: 6
+  },
+  sosHint: {
+    marginTop: Spacing.lg,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1,
+    color: Colors.primary
+  },
+  assistButton: {
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.warningYellow,
+    paddingVertical: 18,
+    borderRadius: Radii.lg,
+    borderWidth: 3,
+    borderColor: Colors.onSurface,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    ...Shadows.hard
+  },
+  assistPressed: {
+    transform: [{ scale: 0.98 }]
+  },
+  assistText: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: Colors.onSurface
+  },
+  quickGrid: {
+    marginTop: Spacing.xl,
+    gap: Spacing.md
+  },
+  quickCard: {
+    backgroundColor: Colors.surfaceWhite,
+    padding: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+    ...Shadows.hard
+  },
+  iconBox: {
+    padding: 10,
+    borderRadius: Radii.md
+  },
+  quickBody: {
+    flex: 1
+  },
+  quickLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: Colors.onSurfaceVariant
+  },
+  quickValue: {
     fontSize: 18,
-    fontWeight: "600"
+    fontWeight: "700",
+    color: Colors.onSurface,
+    marginTop: 4
   },
-  secondaryButton: {
-    marginTop: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d1d5db"
+  quickMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8
   },
-  secondaryButtonText: {
-    color: "#111827",
-    fontSize: 14,
-    fontWeight: "600"
+  quickMetaText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: Colors.infoBlue
+  },
+  mapPreview: {
+    marginTop: Spacing.xl,
+    height: 180,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.lg,
+    overflow: "hidden",
+    ...Shadows.hard
+  },
+  mapImage: {
+    width: "100%",
+    height: "100%"
+  },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(183, 0, 17, 0.1)"
+  },
+  mapPin: {
+    position: "absolute",
+    top: "45%",
+    left: "46%"
+  },
+  mapHint: {
+    position: "absolute",
+    bottom: Spacing.sm,
+    left: Spacing.sm,
+    backgroundColor: Colors.surfaceWhite,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4
+  },
+  mapHintText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: Colors.onSurface
   }
 });

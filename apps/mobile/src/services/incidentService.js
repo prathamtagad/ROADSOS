@@ -21,9 +21,10 @@ export function startCountdown(seconds, onTick, onFinish) {
 
 export async function createIncident({ userId, type, triggerType, location, country }) {
   try {
-    await ensureAuth();
+    const user = await ensureAuth();
+    const resolvedUserId = userId || user?.uid || "anonymous";
     const payload = {
-      userId,
+      userId: resolvedUserId,
       timestamp: serverTimestamp(),
       type,
       triggerType,

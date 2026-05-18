@@ -1,10 +1,27 @@
-import "dotenv/config";
+import path from "path";
+import { config as dotenvConfig } from "dotenv";
+
+dotenvConfig({ path: path.join(__dirname, ".env") });
 
 export default ({ config }) => ({
   ...config,
   name: "ROADSOS",
   slug: "roadsos",
   scheme: "roadsos",
+  android: {
+    package: "com.roadsos",
+    googleServicesFile: "./google-services.json",
+    config: {
+      googleMaps: {
+        apiKey: process.env.GOOGLE_MAPS_API_KEY || ""
+      }
+    }
+  },
+  ios: {
+    config: {
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || ""
+    }
+  },
   extra: {
     firebase: {
       apiKey: process.env.FIREBASE_API_KEY || "",
