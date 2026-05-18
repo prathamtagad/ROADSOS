@@ -1,0 +1,19 @@
+{
+  "name": "roadsos",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "firebase"
+  ],
+  "scripts": {
+    "mobile": "npm --prefix apps/mobile run start",
+    "android": "npm --prefix apps/mobile run android",
+    "ios": "npm --prefix apps/mobile run ios",
+    "web": "npm --prefix apps/mobile run web",
+    "lint": "npm --prefix apps/mobile run lint && npm --prefix firebase run lint",
+    "emulators": "npm --prefix firebase run emulators",
+    "functions:serve": "npm --prefix firebase run serve",
+    "functions:deploy": "npm --prefix firebase run deploy"
+  }
+}

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "surface": "#fbf9f8",
+                        "tertiary-fixed-dim": "#b5c9d9",
+                        "safe-green": "#16A34A",
+                        "on-tertiary-fixed-variant": "#364956",
+                        "secondary-fixed-dim": "#eec200",
+                        "on-primary-container": "#fff6f5",
+                        "primary": "#b70011",
+                        "secondary-fixed": "#ffe083",
+                        "surface-subtle": "#F4F4F4",
+                        "primary-container": "#dc2626",
+                        "outline": "#916f6b",
+                        "on-secondary": "#ffffff",
+                        "warning-yellow": "#FACC15",
+                        "secondary-container": "#fed01b",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#ffdad6",
+                        "on-surface-variant": "#5c403c",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f6f3f2",
+                        "inverse-primary": "#ffb4ab",
+                        "on-secondary-fixed": "#231b00",
+                        "emergency-red": "#DC2626",
+                        "primary-fixed-dim": "#ffb4ab",
+                        "assistance-orange": "#EA580C",
+                        "tertiary": "#495c69",
+                        "on-secondary-container": "#6f5900",
+                        "surface-bright": "#fbf9f8",
+                        "secondary": "#735c00",
+                        "inverse-on-surface": "#f3f0f0",
+                        "info-blue": "#007EB4",
+                        "surface-container-high": "#eae8e7",
+                        "background": "#fbf9f8",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#617482",
+                        "on-background": "#1b1c1c",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#f2f8ff",
+                        "tertiary-fixed": "#d1e5f5",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#410002",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#bf0715",
+                        "surface-white": "#FFFFFF",
+                        "inverse-surface": "#303030",
+                        "surface-container": "#f0eded",
+                        "on-primary-fixed-variant": "#93000b",
+                        "on-surface": "#1b1c1c",
+                        "surface-variant": "#e4e2e1",
+                        "on-secondary-fixed-variant": "#574500",
+                        "outline-variant": "#e6bdb8",
+                        "surface-container-highest": "#e4e2e1",
+                        "on-tertiary-fixed": "#091e29"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "touch-target-min": "56px",
+                        "stack-lg": "3rem",
+                        "stack-md": "1.5rem",
+                        "margin-desktop": "4rem",
+                        "margin-mobile": "1.5rem",
+                        "gutter": "1rem",
+                        "stack-sm": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "button-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-xl": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "800"}],
+                        "button-lg": ["18px", {"lineHeight": "24px", "fontWeight": "700"}],
+                        "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-xl": ["20px", {"lineHeight": "30px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ripple-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border: 4px solid #DC2626;
+            border-radius: 9999px;
+            opacity: 0.5;
+            z-index: -1;
+        }
+        .ripple-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            border: 2px solid #DC2626;
+            border-radius: 9999px;
+            opacity: 0.2;
+            z-index: -1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin-mobile py-4 docked full-width top-0 bg-surface dark:bg-surface-dim border-b-2 border-on-surface dark:border-on-surface-variant sticky z-50">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" data-icon="language">language</span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary dark:text-primary-fixed-dim">Thailand Status: Clear</h1>
+</div>
+<button class="active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="min-h-screen flex flex-col items-center px-margin-mobile pb-32">
+<!-- Dynamic Status Banner -->
+<div class="w-full mt-stack-md bg-inverse-surface text-inverse-on-surface p-4 flex items-center justify-between border-2 border-on-surface shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<div class="flex items-center gap-3">
+<span class="text-2xl">🇹🇭</span>
+<span class="font-label-caps text-label-caps">THAILAND | BORDER MODE ACTIVE</span>
+</div>
+<span class="material-symbols-outlined text-safe-green" data-icon="sensors" style="font-variation-settings: 'FILL' 1;">sensors</span>
+</div>
+<!-- SOS Button Section -->
+<div class="flex-grow flex flex-col items-center justify-center py-stack-lg w-full">
+<div class="relative group">
+<!-- Visual Ripple Effects -->
+<div class="ripple-container absolute inset-0 scale-110"></div>
+<button class="relative w-64 h-64 md:w-80 md:h-80 bg-emergency-red rounded-full flex flex-col items-center justify-center text-center p-8 border-[3px] border-on-background active:scale-90 transition-all duration-150 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+<span class="material-symbols-outlined text-on-primary text-6xl md:text-8xl mb-2" data-icon="emergency" style="font-variation-settings: 'FILL' 1;">emergency</span>
+<span class="font-headline-xl text-headline-xl text-on-primary">SOS</span>
+</button>
+</div>
+<p class="mt-8 font-label-caps text-label-caps text-primary text-center px-4">
+                HOLD FOR 3S OR TRIPLE TAP
+            </p>
+</div>
+<!-- Road Assist Button -->
+<div class="w-full max-w-md mb-stack-md">
+<button class="w-full bg-secondary-container text-on-secondary-container py-6 rounded-lg flex items-center justify-center gap-4 border-[3px] border-on-background shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-4xl" data-icon="tire_repair">tire_repair</span>
+<span class="font-headline-lg-mobile text-headline-lg-mobile uppercase">ROAD ASSIST</span>
+</button>
+</div>
+<!-- Quick Stats Bento Grid -->
+<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-gutter max-w-4xl">
+<!-- Hospital Card -->
+<div class="bg-surface-white p-6 border-2 border-on-surface flex items-start gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<div class="bg-info-blue text-on-tertiary p-3 rounded-lg">
+<span class="material-symbols-outlined" data-icon="local_hospital">local_hospital</span>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">NEAREST HOSPITAL</h3>
+<p class="font-body-xl text-body-xl text-on-surface mt-1">Bangkok Int. (1.2km)</p>
+<div class="flex items-center gap-2 mt-2 text-info-blue">
+<span class="material-symbols-outlined text-sm" data-icon="navigation">navigation</span>
+<span class="font-label-caps text-xs">EST. 4 MINS</span>
+</div>
+</div>
+</div>
+<!-- Police Card -->
+<div class="bg-surface-white p-6 border-2 border-on-surface flex items-start gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<div class="bg-tertiary text-on-tertiary p-3 rounded-lg">
+<span class="material-symbols-outlined" data-icon="local_police">local_police</span>
+</div>
+<div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">NEAREST POLICE</h3>
+<p class="font-body-xl text-body-xl text-on-surface mt-1">Station North (2.5km)</p>
+<div class="flex items-center gap-2 mt-2 text-tertiary">
+<span class="material-symbols-outlined text-sm" data-icon="call">call</span>
+<span class="font-label-caps text-xs">DIRECT LINE READY</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Visual Map Context (Background/Underlay style) -->
+<div class="w-full mt-stack-md rounded-xl overflow-hidden border-2 border-on-surface h-48 relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<img alt="Current location map" class="w-full h-full object-cover grayscale brightness-90 contrast-125" data-alt="A high-contrast topographical map showing a simplified urban grid layout of Bangkok, Thailand. The visual style is rugged and functional, utilizing a monochromatic grayscale palette with sharp black lines and minimal detail for maximum clarity. The lighting is flat and neutral, avoiding any glare or soft shadows, mimicking a professional utility GPS interface used in emergency response vehicles." data-location="Bangkok, Thailand" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCD1zNC-miAasZEccCH4z-mhNgC3jIFdcwPi-VXxcOv2vfl5PHy43P8bCCan4Km4DHYqIkA8UqI0b-vuwmyiI_jhD1nVss-N4_vIFNsXaokGsOW_Q6GCP-zdWNmhgCxA1oiJUVrsdVJb7d6cvCSiKR2tDBiZh5pvPOlERfgOP_IPniPq_EA8XAk6ONhgkCzVAfYTT-eqgxqMn0DvtnVdXXSrSWcROksJvXd7Skb7fAahwPclg68ZEHsQrUxXfnj5KrVfJ7hhMOvB_V0"/>
+<div class="absolute inset-0 bg-primary/10 pointer-events-none"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+<span class="material-symbols-outlined text-emergency-red text-5xl" data-icon="location_on" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface dark:bg-surface-dim border-t-2 border-on-surface dark:border-on-surface-variant flat no shadows">
+<a class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-xl px-4 py-2 active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+<span class="font-label-caps text-label-caps">SOS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container hover:text-on-primary-container active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-label-caps text-label-caps">Assist</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container hover:text-on-primary-container active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-label-caps text-label-caps">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container hover:text-on-primary-container active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</a>
+</nav>
+</body></html>

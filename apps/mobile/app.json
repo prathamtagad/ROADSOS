@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "ROADSOS",
+    "slug": "roadsos",
+    "scheme": "roadsos",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "surface": "#fbf9f8",
+                    "tertiary-fixed-dim": "#b5c9d9",
+                    "safe-green": "#16A34A",
+                    "on-tertiary-fixed-variant": "#364956",
+                    "secondary-fixed-dim": "#eec200",
+                    "on-primary-container": "#fff6f5",
+                    "primary": "#b70011",
+                    "secondary-fixed": "#ffe083",
+                    "surface-subtle": "#F4F4F4",
+                    "primary-container": "#dc2626",
+                    "outline": "#916f6b",
+                    "on-secondary": "#ffffff",
+                    "warning-yellow": "#FACC15",
+                    "secondary-container": "#fed01b",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#ffdad6",
+                    "on-surface-variant": "#5c403c",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f6f3f2",
+                    "inverse-primary": "#ffb4ab",
+                    "on-secondary-fixed": "#231b00",
+                    "emergency-red": "#DC2626",
+                    "primary-fixed-dim": "#ffb4ab",
+                    "assistance-orange": "#EA580C",
+                    "tertiary": "#495c69",
+                    "on-secondary-container": "#6f5900",
+                    "surface-bright": "#fbf9f8",
+                    "secondary": "#735c00",
+                    "inverse-on-surface": "#f3f0f0",
+                    "info-blue": "#007EB4",
+                    "surface-container-high": "#eae8e7",
+                    "background": "#fbf9f8",
+                    "error-container": "#ffdad6",
+                    "tertiary-container": "#617482",
+                    "on-background": "#1b1c1c",
+                    "surface-dim": "#dcd9d9",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#f2f8ff",
+                    "tertiary-fixed": "#d1e5f5",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed": "#410002",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#bf0715",
+                    "surface-white": "#FFFFFF",
+                    "inverse-surface": "#303030",
+                    "surface-container": "#f0eded",
+                    "on-primary-fixed-variant": "#93000b",
+                    "on-surface": "#1b1c1c",
+                    "surface-variant": "#e4e2e1",
+                    "on-secondary-fixed-variant": "#574500",
+                    "outline-variant": "#e6bdb8",
+                    "surface-container-highest": "#e4e2e1",
+                    "on-tertiary-fixed": "#091e29"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "touch-target-min": "56px",
+                    "stack-lg": "3rem",
+                    "stack-md": "1.5rem",
+                    "margin-desktop": "4rem",
+                    "margin-mobile": "1.5rem",
+                    "gutter": "1rem",
+                    "stack-sm": "0.5rem"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "button-lg": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-xl": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "label-caps": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "800"}],
+                    "button-lg": ["18px", {"lineHeight": "24px", "fontWeight": "700"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-xl": ["20px", {"lineHeight": "30px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "34px", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .emergency-stroke {
+            border: 2px solid #1b1c1c;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        @media (min-width: 768px) {
+            .bento-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim border-b-2 border-on-surface dark:border-on-surface-variant flex justify-between items-center w-full px-margin-mobile py-4 sticky top-0 z-50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" data-icon="language">language</span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-black text-primary dark:text-primary-fixed-dim">Thailand Status: Clear</h1>
+</div>
+<button class="active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="px-margin-mobile md:px-margin-desktop py-stack-md max-w-5xl mx-auto">
+<!-- Emergency Medical ID Card Shell -->
+<div class="bg-surface-white emergency-stroke rounded-xl overflow-hidden mb-stack-md shadow-[8px_8px_0px_0px_rgba(27,28,28,1)]">
+<!-- Card Header -->
+<div class="bg-emergency-red p-4 border-b-2 border-on-surface flex items-center justify-between">
+<div class="flex items-center gap-3 text-on-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="emergency" data-weight="fill" style="font-variation-settings: 'FILL' 1;">emergency</span>
+<h2 class="font-label-caps text-label-caps text-white">🆘 EMERGENCY MEDICAL ID | ฉุกเฉิน</h2>
+</div>
+<div class="bg-white text-emergency-red px-3 py-1 rounded font-black text-xl">A+</div>
+</div>
+<!-- Card Content Body -->
+<div class="p-6">
+<!-- Section: Personal Info -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div class="md:col-span-1">
+<img class="w-full aspect-square object-cover rounded-lg border-2 border-on-surface-variant mb-2" data-alt="A professional studio portrait of a woman in her 30s with a calm, clear expression, suitable for a medical identification document. The lighting is bright and even, casting minimal shadows, following a clean and modern high-contrast aesthetic. The background is a soft neutral tone that aligns with a high-utility emergency response interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOsxRgzC6Z5ggrsAMy3d-XiV3-WTr80Hep4zxc_os59tDJe1EC2zJoixcGI5ViG37uvclwQNjql0kt-zdMqGH5y4o3AtjQr_Hzo4efwHuABUqKaPacyJAV8l_I3tRPFcRSbralLsMZlEi7s5UFs7AfE9dLir9NoAeyFvOhWHxT7kWtxd0418KrmE50CjVxtWuLfwNgiPNIV9m4TZt0dMLyIRP1xuTKCm7bYHvs2D2HYgkOvH5vRppE9X0jlh6ucMtt6XozU7ca_j7T"/>
+</div>
+<div class="md:col-span-2 space-y-4">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">NAME / ชื่อ</p>
+<p class="font-headline-lg text-headline-lg uppercase">Sarah Mitchell</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-3 border-2 border-on-surface rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant">BLOOD TYPE / หมู่เลือด</p>
+<p class="font-headline-lg-mobile text-headline-lg-mobile text-emergency-red">A Rh Positive</p>
+</div>
+<div class="bg-error-container p-3 border-2 border-error rounded-lg">
+<p class="font-label-caps text-label-caps text-on-error-container">ALLERGIES / การแพ้</p>
+<p class="font-body-xl text-body-xl text-on-error-container">Penicillin, Peanuts</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Info Sections -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Emergency Contacts -->
+<div class="p-4 border-2 border-on-surface rounded-xl flex flex-col gap-3">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-assistance-orange" data-icon="contact_emergency">contact_emergency</span>
+<p class="font-label-caps text-label-caps">EMERGENCY CONTACTS / ผู้ติดต่อ</p>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center bg-surface-container-lowest p-3 border border-outline rounded-lg">
+<div>
+<p class="font-bold">James Mitchell (UK)</p>
+<p class="font-body-md">+44 7700 900123</p>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="call">call</span>
+</div>
+</div>
+</div>
+<!-- Insurance Info -->
+<div class="p-4 border-2 border-on-surface rounded-xl flex flex-col gap-3">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-info-blue" data-icon="verified_user">verified_user</span>
+<p class="font-label-caps text-label-caps">INSURANCE / ประกันภัย</p>
+</div>
+<div class="bg-surface-container-lowest p-3 border border-outline rounded-lg">
+<p class="font-bold">AXA International Travel</p>
+<p class="font-body-md">Policy: #AX92831-2024</p>
+<div class="mt-2 text-info-blue flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="support_agent">support_agent</span>
+                                24/7 Hotline: +44 20 1234 5678
+                            </div>
+</div>
+</div>
+<!-- Local Authorities -->
+<div class="p-4 border-2 border-on-surface rounded-xl flex flex-col gap-3">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-tertiary" data-icon="policy">policy</span>
+<p class="font-label-caps text-label-caps">LOCAL EMBASSY / สถานทูต</p>
+</div>
+<div class="bg-surface-container-lowest p-3 border border-outline rounded-lg">
+<p class="font-bold">British Embassy Bangkok</p>
+<p class="font-body-md text-on-surface-variant">AIA Sathorn Tower, Level 10</p>
+<p class="font-body-md mt-1 font-bold">+66 (0) 2 305 8333</p>
+</div>
+</div>
+<!-- Quick Medical Notes -->
+<div class="p-4 border-2 border-on-surface rounded-xl flex flex-col gap-3">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary" data-icon="clinical_notes">clinical_notes</span>
+<p class="font-label-caps text-label-caps">MEDICAL NOTES / หมายเหตุ</p>
+</div>
+<ul class="text-body-md space-y-1">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1" data-icon="check_circle">check_circle</span>
+                                Asthmatic (Inhaler in backpack)
+                            </li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-sm mt-1" data-icon="check_circle">check_circle</span>
+                                Organ Donor: YES
+                            </li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Accessibility Footer -->
+<div class="bg-surface-container-high p-6 border-t-2 border-on-surface flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-3">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-14 h-7 bg-on-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-safe-green"></div>
+</label>
+<span class="font-body-xl text-body-xl">Show on Lock Screen</span>
+</div>
+<button class="bg-on-surface text-surface px-8 py-3 rounded-xl font-button-lg text-button-lg flex items-center gap-2 active:scale-95 transition-all w-full md:w-auto justify-center">
+<span class="material-symbols-outlined" data-icon="file_download">file_download</span>
+                    Download PDF Card
+                </button>
+</div>
+</div>
+<!-- Secondary Information -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+<div class="bg-warning-yellow p-6 rounded-xl border-2 border-on-surface">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-3xl" data-icon="warning">warning</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile">Local Emergency</h3>
+</div>
+<p class="font-body-md mb-4">In Thailand, dial 1669 for medical emergencies or 1155 for Tourist Police.</p>
+<div class="flex gap-2">
+<button class="bg-on-surface text-surface px-4 py-2 rounded-lg font-bold flex-1">Call 1669</button>
+<button class="bg-on-surface text-surface px-4 py-2 rounded-lg font-bold flex-1">Call 1155</button>
+</div>
+</div>
+<div class="bg-surface-white p-6 rounded-xl border-2 border-on-surface">
+<h3 class="font-label-caps text-label-caps mb-4">VERIFIED TRAVELER STATUS</h3>
+<div class="flex items-center gap-4">
+<div class="h-16 w-16 bg-safe-green/20 rounded-full flex items-center justify-center text-safe-green">
+<span class="material-symbols-outlined text-4xl" data-icon="verified" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div>
+<p class="font-body-xl">BIMSTEC Directory</p>
+<p class="text-on-surface-variant">Profile: Active &amp; Verified</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface dark:bg-surface-dim border-t-2 border-on-surface dark:border-on-surface-variant">
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container hover:text-on-primary-container active:scale-90 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="emergency">emergency</span>
+<span class="font-label-caps text-label-caps">SOS</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container hover:text-on-primary-container active:scale-90 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-label-caps text-label-caps">Assist</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container hover:text-on-primary-container active:scale-90 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-label-caps text-label-caps">Map</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-primary text-on-primary rounded-xl px-4 py-2 active:scale-90 transition-all duration-150">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-caps text-label-caps">Profile</span>
+</button>
+</nav>
+</body></html>
