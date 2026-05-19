@@ -5,7 +5,6 @@ import * as Location from "expo-location";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import TopAppBar from "../components/TopAppBar";
-import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
 import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
@@ -123,9 +122,6 @@ export default function MapScreen() {
           </Pressable>
         </View>
       </View>
-      <SafeAreaView edges={["bottom"]} style={styles.safeBottom}>
-        <BottomNav activeKey="map" />
-      </SafeAreaView>
     </View>
   );
 }
@@ -138,13 +134,10 @@ const styles = StyleSheet.create({
   safeTop: {
     backgroundColor: Colors.surface
   },
-  safeBottom: {
-    backgroundColor: Colors.surface
-  },
   mapWrap: {
     flex: 1,
     marginHorizontal: Spacing.lg,
-    marginBottom: 120,
+    marginBottom: Spacing.xl,
     borderWidth: 2,
     borderColor: Colors.onSurface,
     borderRadius: Radii.lg,

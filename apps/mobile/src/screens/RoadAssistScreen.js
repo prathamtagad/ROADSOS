@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 
 import TopAppBar from "../components/TopAppBar";
-import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
 import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
@@ -286,9 +285,6 @@ export default function RoadAssistScreen() {
           </View>
         </View>
       </ScrollView>
-      <SafeAreaView edges={["bottom"]} style={styles.safeBottom}>
-        <BottomNav activeKey="assist" />
-      </SafeAreaView>
     </View>
   );
 }
@@ -325,11 +321,8 @@ const styles = StyleSheet.create({
   safeTop: {
     backgroundColor: Colors.surface
   },
-  safeBottom: {
-    backgroundColor: Colors.surface
-  },
   scroll: {
-    paddingBottom: 120
+    paddingBottom: Spacing.xxl
   },
   tabBar: {
     borderBottomWidth: 2,

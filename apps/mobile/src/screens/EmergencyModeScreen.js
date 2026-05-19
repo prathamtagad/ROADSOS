@@ -5,7 +5,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
 import TopAppBar from "../components/TopAppBar";
-import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { createIncident, startCountdown } from "../services/incidentService";
 import { useAppStore } from "../store/useAppStore";
@@ -170,9 +169,6 @@ export default function EmergencyModeScreen() {
           </View>
         </View>
       </Animated.View>
-      <SafeAreaView edges={["bottom"]} style={styles.safeBottom}>
-        <BottomNav activeKey="sos" />
-      </SafeAreaView>
     </View>
   );
 }
@@ -185,14 +181,11 @@ const styles = StyleSheet.create({
   safeTop: {
     backgroundColor: Colors.surface
   },
-  safeBottom: {
-    backgroundColor: Colors.surface
-  },
   canvas: {
     flex: 1,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
-    paddingBottom: 120,
+    paddingBottom: Spacing.xxl,
     justifyContent: "center"
   },
   backgroundImage: {

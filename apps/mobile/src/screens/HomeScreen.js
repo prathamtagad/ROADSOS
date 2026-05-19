@@ -5,7 +5,6 @@ import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import LeafletMapView from "../components/LeafletMapView";
 import TopAppBar from "../components/TopAppBar";
-import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
 import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
@@ -175,9 +174,6 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </ScrollView>
-      <SafeAreaView edges={["bottom"]} style={styles.safeBottom}>
-        <BottomNav activeKey="sos" />
-      </SafeAreaView>
     </View>
   );
 }
@@ -190,12 +186,9 @@ const styles = StyleSheet.create({
   safeTop: {
     backgroundColor: Colors.surface
   },
-  safeBottom: {
-    backgroundColor: Colors.surface
-  },
   scroll: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 120
+    paddingBottom: Spacing.xxl
   },
   statusBanner: {
     marginTop: Spacing.lg,

@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, Image, Pressable, Switch } from "re
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import TopAppBar from "../components/TopAppBar";
-import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
 import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
@@ -160,9 +159,6 @@ export default function TouristEmergencyCardScreen() {
           </View>
         </View>
       </ScrollView>
-      <SafeAreaView edges={["bottom"]} style={styles.safeBottom}>
-        <BottomNav activeKey="profile" />
-      </SafeAreaView>
     </View>
   );
 }
@@ -175,13 +171,10 @@ const styles = StyleSheet.create({
   safeTop: {
     backgroundColor: Colors.surface
   },
-  safeBottom: {
-    backgroundColor: Colors.surface
-  },
   scroll: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
-    paddingBottom: 140
+    paddingBottom: Spacing.xxl
   },
   card: {
     backgroundColor: Colors.surfaceWhite,
