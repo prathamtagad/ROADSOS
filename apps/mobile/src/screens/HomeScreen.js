@@ -170,12 +170,14 @@ export default function HomeScreen() {
               />
             </MapView>
           ) : (
-            <Image source={{ uri: MAP_IMAGE }} style={styles.mapImage} />
+            <>
+              <Image source={{ uri: MAP_IMAGE }} style={styles.mapImage} />
+              <View style={styles.mapOverlay} />
+              <View style={styles.mapPin}>
+                <MaterialIcons name="location-on" size={36} color={Colors.emergencyRed} />
+              </View>
+            </>
           )}
-          <View style={styles.mapOverlay} />
-          <View style={styles.mapPin}>
-            <MaterialIcons name="location-on" size={36} color={Colors.emergencyRed} />
-          </View>
           <View style={styles.mapHint}>
             <Text style={styles.mapHintText}>Tap for Live Map</Text>
           </View>

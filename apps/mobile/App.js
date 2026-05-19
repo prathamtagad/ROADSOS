@@ -3,6 +3,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import RootNavigator from "./src/navigation/RootNavigator";
+import ErrorBoundary from "./src/components/ErrorBoundary";
+import OfflineBanner from "./src/components/OfflineBanner";
 import { initializeOfflineDb } from "./src/services/offlineDb";
 import { logError } from "./src/lib/errors";
 import { listenToNetworkStatus } from "./src/services/networkService";
@@ -158,10 +160,13 @@ export default function App() {
   }, [borderGeofences, currentCountry, setBorderStatus, setCurrentCountry, setLastKnownLocation]);
 
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <RootNavigator />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <OfflineBanner />
+          <RootNavigator />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

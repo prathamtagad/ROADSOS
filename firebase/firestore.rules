@@ -18,24 +18,29 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Contacts are public-read, but only admin/Cloud Functions can write
     match /contacts/{contactId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if false;
     }
 
+    // Hazards: any user can report (create) and read, but not delete/edit others'
     match /hazards/{hazardId} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
     }
 
+    // Data quality is system-managed only
     match /dataQuality/{country} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if false;
     }
 
+    // Border geofences are system-managed only
     match /borderGeofences/{countryPair} {
       allow read: if true;
-      allow create, update, delete: if isSignedIn();
+      allow create, update, delete: if false;
     }
 
     match /errors/{errorId} {
@@ -44,3 +49,4 @@ service cloud.firestore {
     }
   }
 }
+

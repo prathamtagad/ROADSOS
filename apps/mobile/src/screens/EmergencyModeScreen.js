@@ -1,25 +1,34 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Image, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from "expo-location";
 import TopAppBar from "../components/TopAppBar";
 import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { createIncident, startCountdown } from "../services/incidentService";
 import { useAppStore } from "../store/useAppStore";
+import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
+
 
 const BACKGROUND_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDHV8omdt2BK1qpZvB_oC15gA7GI-LiI0S4L87wJzmpAHAp3vB6chM3CsEs-M87D9JIHt1vTcgyR6DE_cwqvdLLFsaxHQ-STa9RFWcS0dw0PUqU32ZiW4ldSNcFRzLtF9Bs4sSNYR80wD6Dt_ZoCqyLgFhCIx8J1eObqbH0M0xfvyR48lgJTSTi48og41ZsiXEOxhwwDl8wwmgFg2yc8ZcuW87F007IipIc6QgdfsgFSsSpb_r59D3z0SPDHzGvnpk0vJyhv86eBdU5";
 
 export default function EmergencyModeScreen() {
-  const [secondsLeft, setSecondsLeft] = useState(10);
-  const [dispatchState, setDispatchState] = useState("pending");
-  const [location, setLocation] = useState(null);
+  const navigation = useNavigation();
+  const route = useRoute();
+  const immediate = route.params?.immediate === true;
+  const [secondsLeft, setSecondsLeft] = useState(immediate ? 0 : 10);
+  const [dispatchState, setDispatchState] = useState(immediate ? "sending" : "pending");
   const [locationError, setLocationError] = useState(null);
+  const [cancelled, setCancelled] = useState(false);
   const pulse = useRef(new Animated.Value(0)).current;
   const dispatchRef = useRef(false);
+  const locationRef = useRef(null);
+  const countdownStopRef = useRef(null);
   const currentCountry = useAppStore((state) => state.currentCountry);
+  const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
 
   useEffect(() => {
     let isMounted = true;
@@ -39,11 +48,11 @@ export default function EmergencyModeScreen() {
         });
 
         if (isMounted) {
-          setLocation({
+          locationRef.current = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             altitude: position.coords.altitude || 0
-          });
+          };
         }
       } catch (error) {
         if (isMounted) {
@@ -59,40 +68,52 @@ export default function EmergencyModeScreen() {
     };
   }, []);
 
+  const dispatchSos = useCallback(async (triggerType) => {
+    if (dispatchRef.current) {
+      return;
+    }
+
+    dispatchRef.current = true;
+    setDispatchState("sending");
+
+    try {
+      await createIncident({
+        userId: null,
+        type: "emergency",
+        triggerType,
+        location: locationRef.current,
+        country: currentCountry
+      });
+      setDispatchState("sent");
+    } catch (error) {
+      setDispatchState("error");
+    }
+  }, [currentCountry]);
+
   useEffect(() => {
-    const stop = startCountdown(10, setSecondsLeft, async () => {
+    if (immediate) {
+      dispatchSos("immediate");
+      return;
+    }
+
+    const stop = startCountdown(10, setSecondsLeft, () => {
       setSecondsLeft(0);
-
-      if (dispatchRef.current) {
-        return;
-      }
-
-      dispatchRef.current = true;
-      setDispatchState("sending");
-
-      try {
-        await createIncident({
-          userId: null,
-          type: "sos",
-          triggerType: "countdown",
-          location,
-          country: currentCountry
-        });
-        setDispatchState("sent");
-      } catch (error) {
-        setDispatchState("error");
-      }
+      dispatchSos("countdown");
     });
 
+    countdownStopRef.current = stop;
+
+    return () => stop();
+  }, [immediate, dispatchSos]);
+
+  useEffect(() => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 1200, useNativeDriver: false }),
         Animated.timing(pulse, { toValue: 0, duration: 1200, useNativeDriver: false })
       ])
     ).start();
-
-    return () => stop();
-  }, [currentCountry, location, pulse]);
+  }, [pulse]);
 
   const backgroundColor = pulse.interpolate({
     inputRange: [0, 1],
@@ -102,7 +123,7 @@ export default function EmergencyModeScreen() {
   return (
     <View style={styles.screen}>
       <SafeAreaView edges={["top"]} style={styles.safeTop}>
-        <TopAppBar title="Thailand Status: Clear" />
+        <TopAppBar title={`${countryName} Status: Clear`} />
       </SafeAreaView>
       <Animated.View style={[styles.canvas, { backgroundColor }]}>
         <Image source={{ uri: BACKGROUND_IMAGE }} style={styles.backgroundImage} />
@@ -126,9 +147,19 @@ export default function EmergencyModeScreen() {
             {dispatchState === "sent" && "Dispatch sent to responders."}
             {dispatchState === "error" && "Dispatch failed. Check connection."}
           </Text>
-          <Pressable style={({ pressed }) => [styles.cancelButton, pressed && styles.cancelPressed]}>
+          <Pressable
+            onPress={() => {
+              if (countdownStopRef.current) {
+                countdownStopRef.current();
+              }
+              setCancelled(true);
+              setDispatchState("cancelled");
+              navigation.goBack();
+            }}
+            style={({ pressed }) => [styles.cancelButton, pressed && styles.cancelPressed]}
+          >
             <Text style={styles.cancelTitle}>CANCEL</Text>
-            <Text style={styles.cancelCaption}>PIN REQUIRED TO ABORT</Text>
+            <Text style={styles.cancelCaption}>TAP TO ABORT</Text>
           </Pressable>
         </View>
         <View style={styles.aiBanner}>
