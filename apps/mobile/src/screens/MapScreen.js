@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import LeafletMapView from "../components/LeafletMapView";
 import * as Location from "expo-location";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -96,23 +96,15 @@ export default function MapScreen() {
         <TopAppBar title={`${countryName} Status: Live Map`} />
       </SafeAreaView>
       <View style={styles.mapWrap}>
-        <MapView
+        <LeafletMapView
           ref={mapRef}
           style={StyleSheet.absoluteFill}
-          initialRegion={region}
-          showsUserLocation
-          showsMyLocationButton
-        >
-          {lastKnownLocation ? (
-            <Marker
-              coordinate={{
-                latitude: lastKnownLocation.lat,
-                longitude: lastKnownLocation.lng
-              }}
-              title="Your location"
-            />
-          ) : null}
-        </MapView>
+          region={region}
+          markerCoordinate={lastKnownLocation ? {
+            latitude: lastKnownLocation.lat,
+            longitude: lastKnownLocation.lng
+          } : null}
+        />
         <View style={styles.mapOverlay}>
           <View style={styles.locationBadge}>
             <MaterialIcons name="location-on" size={18} color={Colors.onPrimary} />

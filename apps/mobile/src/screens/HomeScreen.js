@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Image } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
-import MapView, { Marker } from "react-native-maps";
+import LeafletMapView from "../components/LeafletMapView";
 import TopAppBar from "../components/TopAppBar";
 import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
@@ -153,22 +153,14 @@ export default function HomeScreen() {
         <Pressable style={styles.mapPreview} onPress={() => navigation.navigate("Map")}
         >
           {lastKnownLocation ? (
-            <MapView
+            <LeafletMapView
               style={styles.mapImage}
-              pointerEvents="none"
-              initialRegion={mapRegion}
               region={mapRegion}
-              showsUserLocation
-              showsMyLocationButton={false}
-            >
-              <Marker
-                coordinate={{
-                  latitude: lastKnownLocation.lat,
-                  longitude: lastKnownLocation.lng
-                }}
-                title="You"
-              />
-            </MapView>
+              markerCoordinate={{
+                latitude: lastKnownLocation.lat,
+                longitude: lastKnownLocation.lng
+              }}
+            />
           ) : (
             <>
               <Image source={{ uri: MAP_IMAGE }} style={styles.mapImage} />

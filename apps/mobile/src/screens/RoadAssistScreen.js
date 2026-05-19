@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
-import MapView, { Marker } from "react-native-maps";
+
 import TopAppBar from "../components/TopAppBar";
 import BottomNav from "../components/BottomNav";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
