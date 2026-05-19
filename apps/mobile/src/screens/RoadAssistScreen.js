@@ -1,17 +1,24 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, Image, Linking } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import * as Location from "expo-location";
 
 import TopAppBar from "../components/TopAppBar";
+import LeafletMapView from "../components/LeafletMapView";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
 import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
 import { getEmergencyNumbers, getRoadAssistHotline, getTowingHotline } from "../services/contactService";
 import { syncContacts } from "../services/syncService";
 
-const MAP_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBc2ZVXpSc3_jReFDTBCUt-VtRurLss0Q3SZQ4JiK85UrUECzfZY3Yo7J_yI-RKnyu6n-91BWjclsD3dkk04iXJkAw0uyOS4TehL7KQZlfakoGXBOB7IB6tl-Yy5PTz9XlXpk80pHxgFUHvxOzTblVjB5OK_uqKkLREMp4KZz_yVFFAZfHHOfvBktrTyOE_NNYaXhrqBQxJ9wWS8DlIBLuDDHnmPa8PKMyBgwx5eMSOi0rPX0g4NOx35tJqwchtOEaYaIdvgBaOY00Y";
+const DEFAULT_REGION = {
+  latitude: 13.7563,
+  longitude: 100.5018,
+  latitudeDelta: 0.08,
+  longitudeDelta: 0.08
+};
 
 const TABS = [
   { key: "towing", label: "Towing", icon: "local-shipping" },
@@ -25,13 +32,17 @@ export default function RoadAssistScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [source, setSource] = useState("offline");
+  const [locationError, setLocationError] = useState(null);
+  const navigation = useNavigation();
   const currentCountry = useAppStore((state) => state.currentCountry);
   const offlineMode = useAppStore((state) => state.offlineMode);
   const contactsByCategory = useAppStore((state) => state.contactsByCategory);
   const lastSyncByCategory = useAppStore((state) => state.lastSyncByCategory);
   const lastKnownLocation = useAppStore((state) => state.lastKnownLocation);
+  const setLastKnownLocation = useAppStore((state) => state.setLastKnownLocation);
   const setContacts = useAppStore((state) => state.setContacts);
   const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
+  const mapRef = useRef(null);
 
   const contacts = activeTab === "hotlines" ? [] : contactsByCategory[activeTab] || [];
   const lastSyncedAt = lastSyncByCategory[activeTab];
@@ -111,12 +122,7 @@ export default function RoadAssistScreen() {
   const secondaryContacts = contacts.slice(1, 4);
   const mapRegion = useMemo(() => {
     if (!lastKnownLocation) {
-      return {
-        latitude: 13.7563,
-        longitude: 100.5018,
-        latitudeDelta: 0.08,
-        longitudeDelta: 0.08
-      };
+      return DEFAULT_REGION;
     }
 
     return {
@@ -130,6 +136,62 @@ export default function RoadAssistScreen() {
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function ensureLocation() {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          if (isMounted) {
+            setLocationError("permission");
+          }
+          return;
+        }
+
+        const position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High
+        });
+
+        if (isMounted) {
+          setLastKnownLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            altitude: position.coords.altitude || 0
+          });
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLocationError("unavailable");
+        }
+      }
+    }
+
+    if (!lastKnownLocation) {
+      ensureLocation();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [lastKnownLocation, setLastKnownLocation]);
+
+  useEffect(() => {
+    if (!lastKnownLocation) {
+      return;
+    }
+
+    mapRef.current?.animateToRegion(mapRegion, 450);
+  }, [lastKnownLocation, mapRegion]);
+
+  const handleRecenter = useCallback(() => {
+    mapRef.current?.animateToRegion(mapRegion, 450);
+  }, [mapRegion]);
+
+  const handleOpenMap = useCallback(() => {
+    navigation.navigate("Map");
+  }, [navigation]);
 
   return (
     <View style={styles.screen}>
@@ -271,15 +333,26 @@ export default function RoadAssistScreen() {
         )}
 
         <View style={styles.mapPreview}>
-          <Image source={{ uri: MAP_IMAGE }} style={styles.mapImage} />
+          <LeafletMapView
+            ref={mapRef}
+            style={StyleSheet.absoluteFill}
+            region={mapRegion}
+            markerCoordinate={
+              lastKnownLocation
+                ? { latitude: lastKnownLocation.lat, longitude: lastKnownLocation.lng }
+                : null
+            }
+          />
           <View style={styles.mapLabel}>
-            <Text style={styles.mapLabelText}>LIVE TRACKING ACTIVE</Text>
+            <Text style={styles.mapLabelText}>
+              {locationError ? "LOCATION PERMISSION REQUIRED" : "LIVE TRACKING ACTIVE"}
+            </Text>
           </View>
           <View style={styles.mapActions}>
-            <Pressable style={styles.mapActionButton}>
+            <Pressable style={styles.mapActionButton} onPress={handleRecenter}>
               <MaterialIcons name="my-location" size={20} color={Colors.onSurface} />
             </Pressable>
-            <Pressable style={styles.mapActionButton}>
+            <Pressable style={styles.mapActionButton} onPress={handleOpenMap}>
               <MaterialIcons name="fullscreen" size={20} color={Colors.onSurface} />
             </Pressable>
           </View>
@@ -550,10 +623,6 @@ const styles = StyleSheet.create({
     height: 180,
     overflow: "hidden",
     ...Shadows.hard
-  },
-  mapImage: {
-    width: "100%",
-    height: "100%"
   },
   mapLabel: {
     position: "absolute",

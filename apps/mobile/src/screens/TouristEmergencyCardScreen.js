@@ -38,15 +38,26 @@ export default function TouristEmergencyCardScreen() {
               <View style={styles.profileInfo}>
                 <Text style={styles.sectionLabel}>NAME / ชื่อ</Text>
                 <Text style={styles.profileName}>Sarah Mitchell</Text>
-                <View style={styles.profileGrid}>
-                  <View style={styles.profileCell}>
-                    <Text style={styles.sectionLabel}>BLOOD TYPE / หมู่เลือด</Text>
-                    <Text style={styles.profileValueRed}>A Rh Positive</Text>
+              </View>
+            </View>
+            <View style={styles.medicalRow}>
+              <View style={styles.bloodCard}>
+                <View style={styles.bloodHeader}>
+                  <Text style={styles.medicalLabel}>BLOOD TYPE / หมู่เลือด</Text>
+                  <View style={styles.bloodChip}>
+                    <Text style={styles.bloodChipText}>A+</Text>
                   </View>
-                  <View style={styles.profileCellAlert}>
-                    <Text style={styles.sectionLabelAlert}>ALLERGIES / การแพ้</Text>
-                    <Text style={styles.profileValueAlert}>Penicillin, Peanuts</Text>
-                  </View>
+                </View>
+                <Text style={styles.bloodDetail}>A Rh Positive</Text>
+              </View>
+              <View style={styles.allergyCard}>
+                <View style={styles.allergyHeader}>
+                  <MaterialIcons name="report" size={16} color={Colors.emergencyRed} />
+                  <Text style={styles.medicalLabelAlert}>ALLERGIES / การแพ้</Text>
+                </View>
+                <View style={styles.allergyList}>
+                  <Text style={styles.allergyPill}>PENICILLIN</Text>
+                  <Text style={styles.allergyPill}>PEANUTS</Text>
                 </View>
               </View>
             </View>
@@ -219,18 +230,19 @@ const styles = StyleSheet.create({
   },
   profileRow: {
     flexDirection: "row",
-    gap: Spacing.lg
+    gap: Spacing.lg,
+    alignItems: "center"
   },
   profileImage: {
-    width: 120,
-    height: 120,
+    width: 110,
+    height: 110,
     borderRadius: Radii.md,
     borderWidth: 2,
     borderColor: Colors.outlineVariant
   },
   profileInfo: {
     flex: 1,
-    gap: Spacing.sm
+    gap: Spacing.xs
   },
   sectionLabel: {
     fontSize: 12,
@@ -243,43 +255,80 @@ const styles = StyleSheet.create({
     color: Colors.onSurface,
     textTransform: "uppercase"
   },
-  profileGrid: {
-    flexDirection: "row",
+  medicalRow: {
     gap: Spacing.sm,
-    marginTop: Spacing.sm
+    marginTop: Spacing.md
   },
-  profileCell: {
-    flex: 1,
+  bloodCard: {
     backgroundColor: Colors.surfaceContainer,
-    padding: Spacing.sm,
+    padding: Spacing.md,
     borderWidth: 2,
     borderColor: Colors.onSurface,
-    borderRadius: Radii.md
+    borderRadius: Radii.md,
+    gap: Spacing.xs
   },
-  profileCellAlert: {
-    flex: 1,
-    backgroundColor: Colors.errorContainer,
-    padding: Spacing.sm,
-    borderWidth: 2,
-    borderColor: Colors.emergencyRed,
-    borderRadius: Radii.md
+  bloodHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.xs
   },
-  profileValueRed: {
-    fontSize: 16,
+  medicalLabel: {
+    fontSize: 11,
     fontWeight: "800",
-    color: Colors.emergencyRed,
-    marginTop: 4
+    color: Colors.onSurfaceVariant
   },
-  sectionLabelAlert: {
+  bloodChip: {
+    backgroundColor: Colors.surfaceWhite,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2
+  },
+  bloodChipText: {
     fontSize: 12,
+    fontWeight: "900",
+    color: Colors.emergencyRed
+  },
+  bloodDetail: {
+    fontSize: 16,
     fontWeight: "800",
     color: Colors.emergencyRed
   },
-  profileValueAlert: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: Colors.emergencyRed,
-    marginTop: 4
+  allergyCard: {
+    backgroundColor: Colors.errorContainer,
+    padding: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.emergencyRed,
+    borderRadius: Radii.md,
+    gap: Spacing.xs
+  },
+  allergyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs
+  },
+  medicalLabelAlert: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: Colors.emergencyRed
+  },
+  allergyList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs
+  },
+  allergyPill: {
+    backgroundColor: Colors.surfaceWhite,
+    borderWidth: 1,
+    borderColor: Colors.emergencyRed,
+    borderRadius: Radii.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    fontSize: 11,
+    fontWeight: "800",
+    color: Colors.emergencyRed
   },
   bentoGrid: {
     marginTop: Spacing.lg,
