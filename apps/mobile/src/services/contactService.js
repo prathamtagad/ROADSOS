@@ -2,7 +2,12 @@ import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { firestore, ensureAuth } from "../lib/firebase";
 import { logError } from "../lib/errors";
 import { runSql } from "./offlineDb";
-import { EMERGENCY_NUMBERS, NATIONAL_TOWING_HOTLINES, ROAD_ASSIST_HOTLINES } from "../constants/hardcoded";
+import {
+  EMERGENCY_NUMBERS,
+  NATIONAL_TOWING_HOTLINES,
+  ROAD_ASSIST_HOTLINES,
+  ROAD_ASSIST_MOCK_CONTACTS
+} from "../constants/hardcoded";
 
 export async function fetchContactsByCategory({ country, category, limitCount = 50, brand }) {
   try {
@@ -28,12 +33,23 @@ export async function fetchContactsByCategory({ country, category, limitCount = 
     const snapshot = await getDocs(q);
     const contacts = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
+    if (!contacts.length) {
+      const mockContacts = getMockContacts(country, category, limitCount);
+      if (mockContacts.length) {
+        return { source: "mock", contacts: mockContacts };
+      }
+    }
+
     await cacheContacts(contacts);
 
     return { source: "online", contacts };
   } catch (error) {
     await logError("fetch_contacts", error, { country, category });
     const contacts = await loadCachedContacts({ country, category, limitCount, brand });
+    if (!contacts.length) {
+      const mockContacts = getMockContacts(country, category, limitCount);
+      return { source: "mock", contacts: mockContacts };
+    }
     return { source: "offline", contacts };
   }
 }
@@ -79,6 +95,12 @@ async function loadCachedContacts({ country, category, limitCount, brand }) {
   );
 
   return result.rows._array || [];
+}
+
+function getMockContacts(country, category, limitCount) {
+  const byCountry = ROAD_ASSIST_MOCK_CONTACTS[country] || null;
+  const byCategory = byCountry?.[category] || [];
+  return byCategory.slice(0, limitCount);
 }
 
 export function getEmergencyNumbers(country) {
