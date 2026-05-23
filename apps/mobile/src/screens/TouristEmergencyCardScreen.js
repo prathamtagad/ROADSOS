@@ -4,16 +4,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import TopAppBar from "../components/TopAppBar";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
-import { useAppStore } from "../store/useAppStore";
-import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
+import { useCountryStore } from "../store/countryStore";
 
 const PROFILE_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDOsxRgzC6Z5ggrsAMy3d-XiV3-WTr80Hep4zxc_os59tDJe1EC2zJoixcGI5ViG37uvclwQNjql0kt-zdMqGH5y4o3AtjQr_Hzo4efwHuABUqKaPacyJAV8l_I3tRPFcRSbralLsMZlEi7s5UFs7AfE9dLir9NoAeyFvOhWHxT7kWtxd0418KrmE50CjVxtWuLfwNgiPNIV9m4TZt0dMLyIRP1xuTKCm7bYHvs2D2HYgkOvH5vRppE9X0jlh6ucMtt6XozU7ca_j7T";
 
 export default function TouristEmergencyCardScreen() {
   const [showOnLockScreen, setShowOnLockScreen] = useState(true);
-  const currentCountry = useAppStore((state) => state.currentCountry);
-  const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
+  const currentCountry = useCountryStore((state) => state.currentCountry());
+  const countryName = currentCountry?.name || "BIMSTEC";
 
   return (
     <View style={styles.screen}>

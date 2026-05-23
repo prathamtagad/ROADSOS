@@ -11,6 +11,7 @@ import { listenToNetworkStatus } from "./src/services/networkService";
 import { syncContacts, syncGeofences, restoreSyncMeta } from "./src/services/syncService";
 import { detectCountryCrossing } from "./src/services/geofenceService";
 import { useAppStore } from "./src/store/useAppStore";
+import { useCountryStore } from "./src/store/countryStore";
 
 export default function App() {
   const setOfflineMode = useAppStore((state) => state.setOfflineMode);
@@ -18,12 +19,12 @@ export default function App() {
   const setLastGeofenceSync = useAppStore((state) => state.setLastGeofenceSync);
   const setContacts = useAppStore((state) => state.setContacts);
   const setBorderStatus = useAppStore((state) => state.setBorderStatus);
-  const setCurrentCountry = useAppStore((state) => state.setCurrentCountry);
   const setLastKnownLocation = useAppStore((state) => state.setLastKnownLocation);
   const setLastSyncByCategory = useAppStore((state) => state.setLastSyncByCategory);
-  const currentCountry = useAppStore((state) => state.currentCountry);
   const offlineMode = useAppStore((state) => state.offlineMode);
   const borderGeofences = useAppStore((state) => state.borderGeofences);
+  const currentCountryCode = useCountryStore((state) => state.currentCountryCode);
+  const isManualOverride = useCountryStore((state) => state.isManualOverride);
   const locationWatchRef = useRef(null);
 
   const syncGeofencesNow = useCallback(async () => {
@@ -72,12 +73,12 @@ export default function App() {
       setOfflineMode(!isOnline);
       if (isOnline) {
         syncGeofencesNow();
-        syncContactsNow(currentCountry);
+        syncContactsNow(currentCountryCode);
       }
     });
 
     return () => unsubscribe();
-  }, [currentCountry, setOfflineMode, syncContactsNow, syncGeofencesNow]);
+  }, [currentCountryCode, setOfflineMode, syncContactsNow, syncGeofencesNow]);
 
   useEffect(() => {
     syncGeofencesNow();
@@ -85,9 +86,9 @@ export default function App() {
 
   useEffect(() => {
     if (!offlineMode) {
-      syncContactsNow(currentCountry);
+      syncContactsNow(currentCountryCode);
     }
-  }, [currentCountry, offlineMode, syncContactsNow]);
+  }, [currentCountryCode, offlineMode, syncContactsNow]);
 
   useEffect(() => {
     let isActive = true;
@@ -134,14 +135,19 @@ export default function App() {
 
             const result = detectCountryCrossing({
               location: nextLocation,
-              currentCountry,
+              currentCountry: currentCountryCode,
               geofences: borderGeofences
             });
 
             setBorderStatus(result);
 
-            if (result.inBuffer && result.nextCountry && result.nextCountry !== currentCountry) {
-              setCurrentCountry(result.nextCountry);
+            if (
+              !isManualOverride &&
+              result.inBuffer &&
+              result.nextCountry &&
+              result.nextCountry !== currentCountryCode
+            ) {
+              useCountryStore.setState({ currentCountryCode: result.nextCountry });
             }
           }
         );
@@ -157,7 +163,7 @@ export default function App() {
       locationWatchRef.current?.remove();
       locationWatchRef.current = null;
     };
-  }, [borderGeofences, currentCountry, setBorderStatus, setCurrentCountry, setLastKnownLocation]);
+  }, [borderGeofences, currentCountryCode, isManualOverride, setBorderStatus, setLastKnownLocation]);
 
   return (
     <ErrorBoundary>

@@ -7,8 +7,7 @@ import * as Location from "expo-location";
 import TopAppBar from "../components/TopAppBar";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { createIncident, startCountdown } from "../services/incidentService";
-import { useAppStore } from "../store/useAppStore";
-import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
+import { useCountryStore } from "../store/countryStore";
 
 
 const BACKGROUND_IMAGE =
@@ -26,8 +25,8 @@ export default function EmergencyModeScreen() {
   const dispatchRef = useRef(false);
   const locationRef = useRef(null);
   const countdownStopRef = useRef(null);
-  const currentCountry = useAppStore((state) => state.currentCountry);
-  const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
+  const currentCountry = useCountryStore((state) => state.currentCountry());
+  const countryName = currentCountry?.name || "BIMSTEC";
 
   useEffect(() => {
     let isMounted = true;
@@ -81,7 +80,7 @@ export default function EmergencyModeScreen() {
         type: "emergency",
         triggerType,
         location: locationRef.current,
-        country: currentCountry
+        country: currentCountry.code
       });
       setDispatchState("sent");
     } catch (error) {

@@ -9,7 +9,7 @@ import TopAppBar from "../components/TopAppBar";
 import LeafletMapView from "../components/LeafletMapView";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
-import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
+import { useCountryStore } from "../store/countryStore";
 import { getEmergencyNumbers, getRoadAssistHotline, getTowingHotline } from "../services/contactService";
 import { syncContacts } from "../services/syncService";
 
@@ -34,23 +34,24 @@ export default function RoadAssistScreen() {
   const [source, setSource] = useState("offline");
   const [locationError, setLocationError] = useState(null);
   const navigation = useNavigation();
-  const currentCountry = useAppStore((state) => state.currentCountry);
+  const currentCountry = useCountryStore((state) => state.currentCountry());
   const offlineMode = useAppStore((state) => state.offlineMode);
   const contactsByCategory = useAppStore((state) => state.contactsByCategory);
   const lastSyncByCategory = useAppStore((state) => state.lastSyncByCategory);
   const lastKnownLocation = useAppStore((state) => state.lastKnownLocation);
   const setLastKnownLocation = useAppStore((state) => state.setLastKnownLocation);
   const setContacts = useAppStore((state) => state.setContacts);
-  const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
+  const countryName = currentCountry?.name || "BIMSTEC";
   const mapRef = useRef(null);
+  const currentCountryCode = currentCountry.code;
 
   const contacts = activeTab === "hotlines" ? [] : contactsByCategory[activeTab] || [];
   const lastSyncedAt = lastSyncByCategory[activeTab];
 
   const hotlines = useMemo(() => {
-    const emergency = getEmergencyNumbers(currentCountry);
-    const towing = getTowingHotline(currentCountry);
-    const assist = getRoadAssistHotline(currentCountry);
+    const emergency = getEmergencyNumbers(currentCountryCode);
+    const towing = getTowingHotline(currentCountryCode);
+    const assist = getRoadAssistHotline(currentCountryCode);
 
     return [
       {
@@ -77,7 +78,7 @@ export default function RoadAssistScreen() {
         icon: "support-agent"
       }
     ];
-  }, [currentCountry]);
+  }, [currentCountryCode]);
 
   const loadContacts = useCallback(async () => {
     if (activeTab === "hotlines") {
@@ -89,7 +90,7 @@ export default function RoadAssistScreen() {
 
     try {
       const result = await syncContacts({
-        country: currentCountry,
+        country: currentCountryCode,
         category: activeTab,
         limitCount: 25
       });
@@ -101,7 +102,7 @@ export default function RoadAssistScreen() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, currentCountry, lastSyncedAt, setContacts]);
+  }, [activeTab, currentCountryCode, lastSyncedAt, setContacts]);
 
   const handleRefresh = useCallback(() => {
     loadContacts();

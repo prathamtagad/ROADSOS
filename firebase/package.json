@@ -12,5 +12,8 @@
     "eslint": "^8.57.0",
     "eslint-config-google": "^0.14.0",
     "firebase-tools": "^15.18.0"
+  },
+  "dependencies": {
+    "geofire-common": "^6.0.0"
   }
 }

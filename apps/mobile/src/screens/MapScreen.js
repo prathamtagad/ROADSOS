@@ -7,7 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import TopAppBar from "../components/TopAppBar";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
-import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
+import { useCountryStore } from "../store/countryStore";
 
 const DEFAULT_REGION = {
   latitude: 13.7563,
@@ -18,10 +18,10 @@ const DEFAULT_REGION = {
 
 export default function MapScreen() {
   const [locationError, setLocationError] = useState(null);
-  const currentCountry = useAppStore((state) => state.currentCountry);
+  const currentCountry = useCountryStore((state) => state.currentCountry());
   const lastKnownLocation = useAppStore((state) => state.lastKnownLocation);
   const setLastKnownLocation = useAppStore((state) => state.setLastKnownLocation);
-  const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
+  const countryName = currentCountry?.name || "BIMSTEC";
   const mapRef = useRef(null);
 
   useEffect(() => {

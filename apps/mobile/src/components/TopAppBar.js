@@ -2,20 +2,26 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Colors, Spacing } from "../theme/tokens";
+import CountrySelector from "./CountrySelector";
 
 export default function TopAppBar({ title, onNotificationsPress }) {
   return (
     <View style={styles.container}>
-      <View style={styles.left}>
-        <MaterialIcons name="language" size={22} color={Colors.primary} />
-        <Text style={styles.title}>{title}</Text>
+      <View style={styles.row}>
+        <View style={styles.left}>
+          <MaterialIcons name="language" size={22} color={Colors.primary} />
+          <Text style={styles.title}>{title}</Text>
+        </View>
+        <Pressable
+          onPress={onNotificationsPress}
+          style={({ pressed }) => [styles.iconButton, pressed && styles.iconPressed]}
+        >
+          <MaterialIcons name="notifications" size={22} color={Colors.primary} />
+        </Pressable>
       </View>
-      <Pressable
-        onPress={onNotificationsPress}
-        style={({ pressed }) => [styles.iconButton, pressed && styles.iconPressed]}
-      >
-        <MaterialIcons name="notifications" size={22} color={Colors.primary} />
-      </Pressable>
+      <View style={styles.selectorRow}>
+        <CountrySelector />
+      </View>
     </View>
   );
 }
@@ -27,6 +33,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderBottomWidth: 2,
     borderBottomColor: Colors.onSurface,
+    gap: Spacing.sm
+  },
+  row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between"
@@ -35,6 +44,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm
+  },
+  selectorRow: {
+    alignItems: "flex-start"
   },
   title: {
     fontSize: 20,

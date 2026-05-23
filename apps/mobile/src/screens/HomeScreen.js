@@ -7,16 +7,16 @@ import LeafletMapView from "../components/LeafletMapView";
 import TopAppBar from "../components/TopAppBar";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
-import { COUNTRY_NAME_MAP } from "../constants/hardcoded";
+import { useCountryStore } from "../store/countryStore";
 
 const MAP_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCD1zNC-miAasZEccCH4z-mhNgC3jIFdcwPi-VXxcOv2vfl5PHy43P8bCCan4Km4DHYqIkA8UqI0b-vuwmyiI_jhD1nVss-N4_vIFNsXaokGsOW_Q6GCP-zdWNmhgCxA1oiJUVrsdVJb7d6cvCSiKR2tDBiZh5pvPOlERfgOP_IPniPq_EA8XAk6ONhgkCzVAfYTT-eqgxqMn0DvtnVdXXSrSWcROksJvXd7Skb7fAahwPclg68ZEHsQrUxXfnj5KrVfJ7hhMOvB_V0";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const currentCountry = useAppStore((state) => state.currentCountry);
+  const currentCountry = useCountryStore((state) => state.currentCountry());
   const lastKnownLocation = useAppStore((state) => state.lastKnownLocation);
-  const countryName = COUNTRY_NAME_MAP[currentCountry] || "BIMSTEC";
+  const countryName = currentCountry?.name || "BIMSTEC";
   const tapStateRef = useRef({ count: 0, resetTimer: null, navTimer: null });
 
   const mapRegion = useMemo(() => {
@@ -88,7 +88,7 @@ export default function HomeScreen() {
         <View style={styles.statusBanner}>
           <View style={styles.statusLeft}>
             <View style={styles.flagBadge}>
-              <Text style={styles.flagText}>{currentCountry}</Text>
+              <Text style={styles.flagText}>{currentCountry.code}</Text>
             </View>
             <Text style={styles.statusText}>{`${countryName.toUpperCase()} | BORDER MODE ACTIVE`}</Text>
           </View>
