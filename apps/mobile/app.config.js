@@ -33,6 +33,8 @@ export default ({ config }) => ({
       measurementId: process.env.FIREBASE_MEASUREMENT_ID || ""
     },
     geminiApiKey: process.env.GEMINI_API_KEY || "",
-    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || ""
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+    googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || "",
+    googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || ""
   }
 });

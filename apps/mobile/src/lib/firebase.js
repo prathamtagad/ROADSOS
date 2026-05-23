@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeApp, getApps } from "firebase/app";
-import { getAuth, initializeAuth, signInAnonymously, getReactNativePersistence } from "firebase/auth";
+import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getDatabase } from "firebase/database";
@@ -42,9 +42,9 @@ export async function ensureAuth() {
     throw new Error("Firebase not configured. Set values in apps/mobile/.env.");
   }
 
-  if (!auth.currentUser) {
-    await signInAnonymously(auth);
+  if (auth.currentUser) {
+    return auth.currentUser;
   }
 
-  return auth.currentUser;
+  throw new Error("Sign-in required to access Firebase resources.");
 }

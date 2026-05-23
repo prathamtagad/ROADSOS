@@ -1,74 +1,190 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
-  Image,
+  TextInput,
   Pressable,
-  Switch,
-  Linking
+  StyleSheet,
+  ActivityIndicator
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+
 import TopAppBar from "../components/TopAppBar";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useCountryStore } from "../store/countryStore";
-import { EMERGENCY_NUMBERS } from "../constants/hardcoded";
+import { auth, firestore } from "../lib/firebase";
+import { signInWithGoogle } from "../lib/firebase/auth";
 
-const PROFILE_IMAGE =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDOsxRgzC6Z5ggrsAMy3d-XiV3-WTr80Hep4zxc_os59tDJe1EC2zJoixcGI5ViG37uvclwQNjql0kt-zdMqGH5y4o3AtjQr_Hzo4efwHuABUqKaPacyJAV8l_I3tRPFcRSbralLsMZlEi7s5UFs7AfE9dLir9NoAeyFvOhWHxT7kWtxd0418KrmE50CjVxtWuLfwNgiPNIV9m4TZt0dMLyIRP1xuTKCm7bYHvs2D2HYgkOvH5vRppE9X0jlh6ucMtt6XozU7ca_j7T";
+const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
+const ALLERGY_OPTIONS = ["None", "Penicillin", "NSAIDs", "Latex", "Aspirin"];
+const CONDITION_OPTIONS = ["None", "Asthmatic", "Diabetic", "Hypertensive"];
+const VEHICLE_TYPES = ["Motorcycle", "Car", "Truck"];
 
 export default function TouristEmergencyCardScreen() {
-  const [showOnLockScreen, setShowOnLockScreen] = useState(true);
   const currentCountry = useCountryStore((state) => state.currentCountry());
   const countryName = currentCountry?.name || "BIMSTEC";
-  const emergency = EMERGENCY_NUMBERS[currentCountry.code] || null;
-  const ambulanceNumber = emergency?.ambulance || null;
-  const policeNumber = emergency?.police || null;
-  const touristPoliceNumber = emergency?.touristPolice || null;
+  const [userId, setUserId] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [name, setName] = useState("");
+  const [bloodType, setBloodType] = useState("");
+  const [allergies, setAllergies] = useState(["None"]);
+  const [conditions, setConditions] = useState(["None"]);
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
+  const [vehicleBrand, setVehicleBrand] = useState("");
+  const [requiresSignIn, setRequiresSignIn] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+  const unsubscribeRef = useRef(null);
 
-  const emergencyText = useMemo(() => {
-    const lines = [];
-    if (ambulanceNumber) {
-      lines.push(`dial ${ambulanceNumber} for medical emergencies`);
+  const canSave = useMemo(() => {
+    return Boolean(
+      name &&
+        bloodType &&
+        emergencyContactName &&
+        emergencyContactPhone &&
+        vehicleType &&
+        vehicleBrand
+    );
+  }, [
+    name,
+    bloodType,
+    emergencyContactName,
+    emergencyContactPhone,
+    vehicleType,
+    vehicleBrand
+  ]);
+
+  const loadProfile = useCallback(async () => {
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
     }
 
-    if (touristPoliceNumber) {
-      lines.push(`dial ${touristPoliceNumber} for Tourist Police`);
-    } else if (policeNumber) {
-      lines.push(`dial ${policeNumber} for Police`);
-    }
+    setLoading(true);
+    setError("");
 
-    if (!lines.length) {
-      return `In ${countryName}, dial local emergency services.`;
-    }
-
-    return `In ${countryName}, ${lines.join(" or ")}.`;
-  }, [ambulanceNumber, countryName, policeNumber, touristPoliceNumber]);
-
-  const emergencyButtons = useMemo(() => {
-    const buttons = [];
-    if (ambulanceNumber) {
-      buttons.push({ label: `Call ${ambulanceNumber}`, number: ambulanceNumber });
-    }
-
-    if (touristPoliceNumber) {
-      buttons.push({ label: `Call ${touristPoliceNumber}`, number: touristPoliceNumber });
-    } else if (policeNumber) {
-      buttons.push({ label: `Call ${policeNumber}`, number: policeNumber });
-    }
-
-    return buttons;
-  }, [ambulanceNumber, policeNumber, touristPoliceNumber]);
-
-  const handleCall = (number) => {
-    if (!number) {
+    const currentUser = auth?.currentUser || null;
+    if (!currentUser || !firestore) {
+      setError("Sign in required to load your profile.");
+      setRequiresSignIn(true);
+      setLoading(false);
       return;
     }
 
-    Linking.openURL(`tel:${number}`);
-  };
+    setUserId(currentUser.uid);
+    const profileRef = doc(firestore, "users", currentUser.uid);
+    unsubscribeRef.current = onSnapshot(profileRef, (snapshot) => {
+      const data = snapshot.data() || {};
+      setName(typeof data.name === "string" ? data.name : "");
+      setBloodType(typeof data.bloodType === "string" ? data.bloodType : "");
+      setAllergies(
+        Array.isArray(data.allergies) && data.allergies.length ? data.allergies : ["None"]
+      );
+      setConditions(
+        Array.isArray(data.conditions) && data.conditions.length ? data.conditions : ["None"]
+      );
+      setEmergencyContactName(
+        typeof data.emergencyContactName === "string" ? data.emergencyContactName : ""
+      );
+      setEmergencyContactPhone(
+        typeof data.emergencyContactPhone === "string" ? data.emergencyContactPhone : ""
+      );
+      setVehicleType(typeof data.vehicleType === "string" ? data.vehicleType : "");
+      setVehicleBrand(typeof data.vehicleBrand === "string" ? data.vehicleBrand : "");
+      setRequiresSignIn(false);
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    const authUnsub = auth ? onAuthStateChanged(auth, () => void loadProfile()) : null;
+    void loadProfile();
+
+    return () => {
+      if (authUnsub) {
+        authUnsub();
+      }
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [loadProfile]);
+
+  const toggleMulti = useCallback((value, current, setValue) => {
+    if (value === "None") {
+      setValue(current.includes("None") ? [] : ["None"]);
+      return;
+    }
+
+    const next = current.filter((item) => item !== "None");
+    if (next.includes(value)) {
+      setValue(next.filter((item) => item !== value));
+      return;
+    }
+
+    setValue([...next, value]);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!userId || !firestore) {
+      setError("Sign in required to save your profile.");
+      setRequiresSignIn(true);
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      const payload = {
+        name,
+        bloodType,
+        allergies: allergies.length ? allergies : ["None"],
+        conditions: conditions.length ? conditions : ["None"],
+        emergencyContactName,
+        emergencyContactPhone,
+        vehicleType,
+        vehicleBrand,
+        updatedAt: serverTimestamp()
+      };
+
+      await setDoc(doc(firestore, "users", userId), payload, { merge: true });
+      setRequiresSignIn(false);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Unable to save profile.");
+    } finally {
+      setSaving(false);
+    }
+  }, [
+    allergies,
+    bloodType,
+    conditions,
+    emergencyContactName,
+    emergencyContactPhone,
+    name,
+    userId,
+    vehicleBrand,
+    vehicleType
+  ]);
+
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      setSigningIn(true);
+      setError("");
+      await signInWithGoogle();
+    } catch (signInError) {
+      setError(signInError instanceof Error ? signInError.message : "Google sign-in failed.");
+    } finally {
+      setSigningIn(false);
+    }
+  }, []);
 
   return (
     <View style={styles.screen}>
@@ -76,157 +192,148 @@ export default function TouristEmergencyCardScreen() {
         <TopAppBar title={`${countryName} Status: Clear`} />
       </SafeAreaView>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderLeft}>
-              <MaterialIcons name="medical-services" size={22} color={Colors.onPrimary} />
-              <Text style={styles.cardHeaderText}>EMERGENCY MEDICAL ID | ฉุกเฉิน</Text>
-            </View>
-            <View style={styles.bloodBadge}>
-              <Text style={styles.bloodBadgeText}>A+</Text>
-            </View>
-          </View>
-
-          <View style={styles.cardBody}>
-            <View style={styles.profileRow}>
-              <Image source={{ uri: PROFILE_IMAGE }} style={styles.profileImage} />
-              <View style={styles.profileInfo}>
-                <Text style={styles.sectionLabel}>NAME / ชื่อ</Text>
-                <Text style={styles.profileName}>Sarah Mitchell</Text>
-              </View>
-            </View>
-            <View style={styles.medicalRow}>
-              <View style={styles.bloodCard}>
-                <View style={styles.bloodHeader}>
-                  <Text style={styles.medicalLabel}>BLOOD TYPE / หมู่เลือด</Text>
-                  <View style={styles.bloodChip}>
-                    <Text style={styles.bloodChipText}>A+</Text>
-                  </View>
-                </View>
-                <Text style={styles.bloodDetail}>A Rh Positive</Text>
-              </View>
-              <View style={styles.allergyCard}>
-                <View style={styles.allergyHeader}>
-                  <MaterialIcons name="report" size={16} color={Colors.emergencyRed} />
-                  <Text style={styles.medicalLabelAlert}>ALLERGIES / การแพ้</Text>
-                </View>
-                <View style={styles.allergyList}>
-                  <Text style={styles.allergyPill}>PENICILLIN</Text>
-                  <Text style={styles.allergyPill}>PEANUTS</Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.bentoGrid}>
-              <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                  <MaterialIcons name="contacts" size={18} color={Colors.assistanceOrange} />
-                  <Text style={styles.infoTitle}>EMERGENCY CONTACTS / ผู้ติดต่อ</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <View>
-                    <Text style={styles.infoName}>James Mitchell (UK)</Text>
-                    <Text style={styles.infoMeta}>+44 7700 900123</Text>
-                  </View>
-                  <MaterialIcons name="call" size={18} color={Colors.primary} />
-                </View>
-              </View>
-
-              <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                  <MaterialIcons name="verified-user" size={18} color={Colors.infoBlue} />
-                  <Text style={styles.infoTitle}>INSURANCE / ประกันภัย</Text>
-                </View>
-                <View style={styles.infoRowBlock}>
-                  <Text style={styles.infoName}>AXA International Travel</Text>
-                  <Text style={styles.infoMeta}>Policy: #AX92831-2024</Text>
-                  <View style={styles.infoSupportRow}>
-                    <MaterialIcons name="support-agent" size={16} color={Colors.infoBlue} />
-                    <Text style={styles.infoSupportText}>24/7 Hotline: +44 20 1234 5678</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                  <MaterialIcons name="account-balance" size={18} color={Colors.tertiary} />
-                  <Text style={styles.infoTitle}>LOCAL EMBASSY / สถานทูต</Text>
-                </View>
-                <View style={styles.infoRowBlock}>
-                  <Text style={styles.infoName}>British Embassy Bangkok</Text>
-                  <Text style={styles.infoMeta}>AIA Sathorn Tower, Level 10</Text>
-                  <Text style={styles.infoMetaStrong}>+66 (0) 2 305 8333</Text>
-                </View>
-              </View>
-
-              <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                  <MaterialIcons name="assignment" size={18} color={Colors.primary} />
-                  <Text style={styles.infoTitle}>MEDICAL NOTES / หมายเหตุ</Text>
-                </View>
-                <View style={styles.noteRow}>
-                  <MaterialIcons name="check-circle" size={16} color={Colors.onSurfaceVariant} />
-                  <Text style={styles.infoMeta}>Asthmatic (Inhaler in backpack)</Text>
-                </View>
-                <View style={styles.noteRow}>
-                  <MaterialIcons name="check-circle" size={16} color={Colors.onSurfaceVariant} />
-                  <Text style={styles.infoMeta}>Organ Donor: YES</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.cardFooter}>
-            <View style={styles.switchRow}>
-              <Switch
-                value={showOnLockScreen}
-                onValueChange={setShowOnLockScreen}
-                trackColor={{ true: Colors.safeGreen, false: Colors.onSurfaceVariant }}
-                thumbColor={Colors.surfaceWhite}
-              />
-              <Text style={styles.footerText}>Show on Lock Screen</Text>
-            </View>
-            <Pressable style={styles.downloadButton}>
-              <MaterialIcons name="file-download" size={18} color={Colors.surface} />
-              <Text style={styles.downloadText}>Download PDF Card</Text>
-            </Pressable>
-          </View>
+        <View style={styles.headerCard}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerSubtitle}>Share details to help responders act faster.</Text>
         </View>
 
-        <View style={styles.secondaryGrid}>
-          <View style={styles.secondaryCardYellow}>
-            <View style={styles.secondaryHeader}>
-              <MaterialIcons name="warning" size={26} color={Colors.onSurface} />
-              <Text style={styles.secondaryTitle}>Local Emergency</Text>
-            </View>
-            <Text style={styles.secondaryBody}>
-              {emergencyText}
-            </Text>
-            <View style={styles.buttonRow}>
-              {emergencyButtons.map((button) => (
+        {loading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator color={Colors.primary} />
+            <Text style={styles.loadingText}>Loading profile...</Text>
+          </View>
+        ) : null}
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        {requiresSignIn ? (
+          <Pressable style={styles.signInButton} onPress={handleGoogleSignIn}>
+            {signingIn ? (
+              <ActivityIndicator color={Colors.onSurface} />
+            ) : (
+              <Text style={styles.signInText}>Sign in with Google</Text>
+            )}
+          </Pressable>
+        ) : null}
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Full Name</Text>
+          <TextInput value={name} onChangeText={setName} style={styles.input} />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Blood Type</Text>
+          <View style={styles.pillRow}>
+            {BLOOD_TYPES.map((type) => {
+              const active = bloodType === type;
+              return (
                 <Pressable
-                  key={button.number}
-                  style={styles.secondaryButton}
-                  onPress={() => handleCall(button.number)}
+                  key={type}
+                  onPress={() => setBloodType(type)}
+                  style={[styles.pill, active && styles.pillActive]}
                 >
-                  <Text style={styles.secondaryButtonText}>{button.label}</Text>
+                  <Text style={[styles.pillText, active && styles.pillTextActive]}>{type}</Text>
                 </Pressable>
-              ))}
-            </View>
-          </View>
-          <View style={styles.secondaryCardWhite}>
-            <Text style={styles.sectionLabel}>VERIFIED TRAVELER STATUS</Text>
-            <View style={styles.verifiedRow}>
-              <View style={styles.verifiedBadge}>
-                  <MaterialIcons name="check-circle" size={32} color={Colors.safeGreen} />
-              </View>
-              <View>
-                <Text style={styles.infoName}>BIMSTEC Directory</Text>
-                <Text style={styles.infoMeta}>Profile: Active and Verified</Text>
-              </View>
-            </View>
+              );
+            })}
           </View>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Allergies</Text>
+          <View style={styles.chipRow}>
+            {ALLERGY_OPTIONS.map((option) => {
+              const active = allergies.includes(option);
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() => toggleMulti(option, allergies, setAllergies)}
+                  style={[styles.chip, active && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{option}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Conditions</Text>
+          <View style={styles.chipRow}>
+            {CONDITION_OPTIONS.map((option) => {
+              const active = conditions.includes(option);
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() => toggleMulti(option, conditions, setConditions)}
+                  style={[styles.chip, active && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{option}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Emergency Contact Name</Text>
+          <TextInput
+            value={emergencyContactName}
+            onChangeText={setEmergencyContactName}
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Emergency Contact Phone</Text>
+          <TextInput
+            value={emergencyContactPhone}
+            onChangeText={setEmergencyContactPhone}
+            style={styles.input}
+            keyboardType="phone-pad"
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Vehicle Type</Text>
+          <View style={styles.vehicleRow}>
+            {VEHICLE_TYPES.map((type) => {
+              const active = vehicleType === type;
+              return (
+                <Pressable
+                  key={type}
+                  style={[styles.vehicleCard, active && styles.vehicleCardActive]}
+                  onPress={() => setVehicleType(type)}
+                >
+                  <Text style={[styles.vehicleText, active && styles.vehicleTextActive]}>
+                    {type}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.label}>Vehicle Brand</Text>
+          <TextInput value={vehicleBrand} onChangeText={setVehicleBrand} style={styles.input} />
+        </View>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.saveButton,
+            !canSave && styles.saveDisabled,
+            pressed && styles.savePressed
+          ]}
+          onPress={handleSave}
+          disabled={!canSave || saving}
+        >
+          {saving ? (
+            <ActivityIndicator color={Colors.onPrimary} />
+          ) : (
+            <Text style={styles.saveText}>Save Profile</Text>
+          )}
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -242,314 +349,169 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg,
-    paddingBottom: Spacing.xxl
+    paddingBottom: Spacing.xxl,
+    paddingTop: Spacing.lg
   },
-  card: {
+  headerCard: {
     backgroundColor: Colors.surfaceWhite,
     borderWidth: 2,
     borderColor: Colors.onSurface,
     borderRadius: Radii.lg,
-    overflow: "hidden",
-    ...Shadows.hardLg
-  },
-  cardHeader: {
-    backgroundColor: Colors.emergencyRed,
     padding: Spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.onSurface
+    ...Shadows.hard
   },
-  cardHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm
-  },
-  cardHeaderText: {
-    color: Colors.onPrimary,
-    fontWeight: "800",
-    fontSize: 12
-  },
-  bloodBadge: {
-    backgroundColor: Colors.surfaceWhite,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radii.sm
-  },
-  bloodBadgeText: {
-    color: Colors.emergencyRed,
-    fontWeight: "900",
-    fontSize: 16
-  },
-  cardBody: {
-    padding: Spacing.lg
-  },
-  profileRow: {
-    flexDirection: "row",
-    gap: Spacing.lg,
-    alignItems: "center"
-  },
-  profileImage: {
-    width: 110,
-    height: 110,
-    borderRadius: Radii.md,
-    borderWidth: 2,
-    borderColor: Colors.outlineVariant
-  },
-  profileInfo: {
-    flex: 1,
-    gap: Spacing.xs
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: Colors.onSurfaceVariant
-  },
-  profileName: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: Colors.onSurface,
-    textTransform: "uppercase"
-  },
-  medicalRow: {
-    gap: Spacing.sm,
-    marginTop: Spacing.md
-  },
-  bloodCard: {
-    backgroundColor: Colors.surfaceContainer,
-    padding: Spacing.md,
-    borderWidth: 2,
-    borderColor: Colors.onSurface,
-    borderRadius: Radii.md,
-    gap: Spacing.xs
-  },
-  bloodHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.xs
-  },
-  medicalLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: Colors.onSurfaceVariant
-  },
-  bloodChip: {
-    backgroundColor: Colors.surfaceWhite,
-    borderWidth: 2,
-    borderColor: Colors.onSurface,
-    borderRadius: Radii.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2
-  },
-  bloodChipText: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: Colors.emergencyRed
-  },
-  bloodDetail: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: Colors.emergencyRed
-  },
-  allergyCard: {
-    backgroundColor: Colors.errorContainer,
-    padding: Spacing.md,
-    borderWidth: 2,
-    borderColor: Colors.emergencyRed,
-    borderRadius: Radii.md,
-    gap: Spacing.xs
-  },
-  allergyHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs
-  },
-  medicalLabelAlert: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: Colors.emergencyRed
-  },
-  allergyList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.xs
-  },
-  allergyPill: {
-    backgroundColor: Colors.surfaceWhite,
-    borderWidth: 1,
-    borderColor: Colors.emergencyRed,
-    borderRadius: Radii.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    fontSize: 11,
-    fontWeight: "800",
-    color: Colors.emergencyRed
-  },
-  bentoGrid: {
-    marginTop: Spacing.lg,
-    gap: Spacing.md
-  },
-  infoCard: {
-    borderWidth: 2,
-    borderColor: Colors.onSurface,
-    borderRadius: Radii.lg,
-    padding: Spacing.md,
-    gap: Spacing.sm
-  },
-  infoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm
-  },
-  infoTitle: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: Colors.onSurface
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.outline,
-    borderRadius: Radii.md
-  },
-  infoRowBlock: {
-    padding: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.outline,
-    borderRadius: Radii.md
-  },
-  infoName: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: Colors.onSurface
-  },
-  infoMeta: {
-    fontSize: 13,
-    color: Colors.onSurfaceVariant,
-    marginTop: 2
-  },
-  infoMetaStrong: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: Colors.onSurface,
-    marginTop: 6
-  },
-  infoSupportRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    marginTop: 6
-  },
-  infoSupportText: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: Colors.infoBlue
-  },
-  noteRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm
-  },
-  cardFooter: {
-    backgroundColor: Colors.surfaceContainer,
-    padding: Spacing.md,
-    borderTopWidth: 2,
-    borderTopColor: Colors.onSurface,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: Spacing.sm
-  },
-  switchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm
-  },
-  footerText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: Colors.onSurface
-  },
-  downloadButton: {
-    backgroundColor: Colors.onSurface,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.lg,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm
-  },
-  downloadText: {
-    color: Colors.surface,
-    fontWeight: "800"
-  },
-  secondaryGrid: {
-    marginTop: Spacing.lg,
-    gap: Spacing.md
-  },
-  secondaryCardYellow: {
-    backgroundColor: Colors.warningYellow,
-    padding: Spacing.lg,
-    borderRadius: Radii.lg,
-    borderWidth: 2,
-    borderColor: Colors.onSurface
-  },
-  secondaryHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm
-  },
-  secondaryTitle: {
+  headerTitle: {
     fontSize: 20,
     fontWeight: "800",
     color: Colors.onSurface
   },
-  secondaryBody: {
-    fontSize: 14,
-    color: Colors.onSurface,
-    marginBottom: Spacing.md
+  headerSubtitle: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: "700",
+    color: Colors.onSurfaceVariant
   },
-  buttonRow: {
+  loadingRow: {
+    marginTop: Spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm
+  },
+  loadingText: {
+    color: Colors.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: "700"
+  },
+  errorText: {
+    marginTop: Spacing.md,
+    color: Colors.emergencyRed,
+    fontWeight: "700"
+  },
+  section: {
+    marginTop: Spacing.lg,
+    gap: Spacing.sm
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: Colors.onSurfaceVariant,
+    letterSpacing: 0.6
+  },
+  input: {
+    backgroundColor: Colors.surfaceWhite,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    color: Colors.onSurface,
+    fontSize: 16
+  },
+  pillRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm
+  },
+  pill: {
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    backgroundColor: Colors.surfaceWhite
+  },
+  pillActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary
+  },
+  pillText: {
+    color: Colors.onSurface,
+    fontWeight: "800"
+  },
+  pillTextActive: {
+    color: Colors.onPrimary
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm
+  },
+  chip: {
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    backgroundColor: Colors.surfaceWhite
+  },
+  chipActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary
+  },
+  chipText: {
+    color: Colors.onSurface,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  chipTextActive: {
+    color: Colors.onPrimary
+  },
+  vehicleRow: {
     flexDirection: "row",
     gap: Spacing.sm
   },
-  secondaryButton: {
+  vehicleCard: {
     flex: 1,
-    backgroundColor: Colors.onSurface,
-    paddingVertical: Spacing.sm,
-    borderRadius: Radii.md,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surfaceWhite,
     alignItems: "center"
   },
-  secondaryButtonText: {
-    color: Colors.surface,
+  vehicleCardActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary
+  },
+  vehicleText: {
+    color: Colors.onSurface,
     fontWeight: "800"
   },
-  secondaryCardWhite: {
-    backgroundColor: Colors.surfaceWhite,
-    padding: Spacing.lg,
+  vehicleTextActive: {
+    color: Colors.onPrimary
+  },
+  saveButton: {
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.primary,
     borderRadius: Radii.lg,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
     borderWidth: 2,
     borderColor: Colors.onSurface
   },
-  verifiedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    marginTop: Spacing.sm
+  saveDisabled: {
+    opacity: 0.6
   },
-  verifiedBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "rgba(22, 163, 74, 0.2)",
+  savePressed: {
+    transform: [{ scale: 0.98 }]
+  },
+  saveText: {
+    color: Colors.onPrimary,
+    fontSize: 16,
+    fontWeight: "800"
+  },
+  signInButton: {
+    marginTop: Spacing.md,
+    backgroundColor: Colors.surfaceWhite,
+    borderRadius: Radii.lg,
+    paddingVertical: Spacing.sm,
     alignItems: "center",
-    justifyContent: "center"
+    borderWidth: 2,
+    borderColor: Colors.onSurface
+  },
+  signInText: {
+    color: Colors.onSurface,
+    fontSize: 14,
+    fontWeight: "800"
   }
 });

@@ -5,6 +5,7 @@ import * as Location from "expo-location";
 import RootNavigator from "./src/navigation/RootNavigator";
 import ErrorBoundary from "./src/components/ErrorBoundary";
 import OfflineBanner from "./src/components/OfflineBanner";
+import ResponderAlert from "./src/components/ResponderAlert";
 import { initializeOfflineDb } from "./src/services/offlineDb";
 import { logError } from "./src/lib/errors";
 import { listenToNetworkStatus } from "./src/services/networkService";
@@ -12,6 +13,7 @@ import { syncContacts, syncGeofences, restoreSyncMeta } from "./src/services/syn
 import { detectCountryCrossing } from "./src/services/geofenceService";
 import { useAppStore } from "./src/store/useAppStore";
 import { useCountryStore } from "./src/store/countryStore";
+import { useFCMHandler } from "./src/hooks/useFCMHandler";
 
 export default function App() {
   const setOfflineMode = useAppStore((state) => state.setOfflineMode);
@@ -26,6 +28,7 @@ export default function App() {
   const currentCountryCode = useCountryStore((state) => state.currentCountryCode);
   const isManualOverride = useCountryStore((state) => state.isManualOverride);
   const locationWatchRef = useRef(null);
+  const { alertVisible, alertPayload, dismissAlert } = useFCMHandler();
 
   const syncGeofencesNow = useCallback(async () => {
     try {
@@ -170,6 +173,17 @@ export default function App() {
       <SafeAreaProvider>
         <NavigationContainer>
           <OfflineBanner />
+          {alertPayload ? (
+            <ResponderAlert
+              visible={alertVisible}
+              distanceMeters={alertPayload.distanceMeters}
+              incidentType={alertPayload.incidentType}
+              incidentId={alertPayload.incidentId}
+              incidentLat={alertPayload.incidentLat}
+              incidentLng={alertPayload.incidentLng}
+              onDismiss={dismissAlert}
+            />
+          ) : null}
           <RootNavigator />
         </NavigationContainer>
       </SafeAreaProvider>
