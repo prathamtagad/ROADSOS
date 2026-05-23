@@ -1,10 +1,20 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Image, Pressable, Switch } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Pressable,
+  Switch,
+  Linking
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import TopAppBar from "../components/TopAppBar";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useCountryStore } from "../store/countryStore";
+import { EMERGENCY_NUMBERS } from "../constants/hardcoded";
 
 const PROFILE_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDOsxRgzC6Z5ggrsAMy3d-XiV3-WTr80Hep4zxc_os59tDJe1EC2zJoixcGI5ViG37uvclwQNjql0kt-zdMqGH5y4o3AtjQr_Hzo4efwHuABUqKaPacyJAV8l_I3tRPFcRSbralLsMZlEi7s5UFs7AfE9dLir9NoAeyFvOhWHxT7kWtxd0418KrmE50CjVxtWuLfwNgiPNIV9m4TZt0dMLyIRP1xuTKCm7bYHvs2D2HYgkOvH5vRppE9X0jlh6ucMtt6XozU7ca_j7T";
@@ -13,6 +23,52 @@ export default function TouristEmergencyCardScreen() {
   const [showOnLockScreen, setShowOnLockScreen] = useState(true);
   const currentCountry = useCountryStore((state) => state.currentCountry());
   const countryName = currentCountry?.name || "BIMSTEC";
+  const emergency = EMERGENCY_NUMBERS[currentCountry.code] || null;
+  const ambulanceNumber = emergency?.ambulance || null;
+  const policeNumber = emergency?.police || null;
+  const touristPoliceNumber = emergency?.touristPolice || null;
+
+  const emergencyText = useMemo(() => {
+    const lines = [];
+    if (ambulanceNumber) {
+      lines.push(`dial ${ambulanceNumber} for medical emergencies`);
+    }
+
+    if (touristPoliceNumber) {
+      lines.push(`dial ${touristPoliceNumber} for Tourist Police`);
+    } else if (policeNumber) {
+      lines.push(`dial ${policeNumber} for Police`);
+    }
+
+    if (!lines.length) {
+      return `In ${countryName}, dial local emergency services.`;
+    }
+
+    return `In ${countryName}, ${lines.join(" or ")}.`;
+  }, [ambulanceNumber, countryName, policeNumber, touristPoliceNumber]);
+
+  const emergencyButtons = useMemo(() => {
+    const buttons = [];
+    if (ambulanceNumber) {
+      buttons.push({ label: `Call ${ambulanceNumber}`, number: ambulanceNumber });
+    }
+
+    if (touristPoliceNumber) {
+      buttons.push({ label: `Call ${touristPoliceNumber}`, number: touristPoliceNumber });
+    } else if (policeNumber) {
+      buttons.push({ label: `Call ${policeNumber}`, number: policeNumber });
+    }
+
+    return buttons;
+  }, [ambulanceNumber, policeNumber, touristPoliceNumber]);
+
+  const handleCall = (number) => {
+    if (!number) {
+      return;
+    }
+
+    Linking.openURL(`tel:${number}`);
+  };
 
   return (
     <View style={styles.screen}>
@@ -144,15 +200,18 @@ export default function TouristEmergencyCardScreen() {
               <Text style={styles.secondaryTitle}>Local Emergency</Text>
             </View>
             <Text style={styles.secondaryBody}>
-              In Thailand, dial 1669 for medical emergencies or 1155 for Tourist Police.
+              {emergencyText}
             </Text>
             <View style={styles.buttonRow}>
-              <Pressable style={styles.secondaryButton}>
-                <Text style={styles.secondaryButtonText}>Call 1669</Text>
-              </Pressable>
-              <Pressable style={styles.secondaryButton}>
-                <Text style={styles.secondaryButtonText}>Call 1155</Text>
-              </Pressable>
+              {emergencyButtons.map((button) => (
+                <Pressable
+                  key={button.number}
+                  style={styles.secondaryButton}
+                  onPress={() => handleCall(button.number)}
+                >
+                  <Text style={styles.secondaryButtonText}>{button.label}</Text>
+                </Pressable>
+              ))}
             </View>
           </View>
           <View style={styles.secondaryCardWhite}>

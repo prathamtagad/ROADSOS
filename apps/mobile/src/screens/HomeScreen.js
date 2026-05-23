@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -8,6 +8,7 @@ import TopAppBar from "../components/TopAppBar";
 import { Colors, Radii, Shadows, Spacing } from "../theme/tokens";
 import { useAppStore } from "../store/useAppStore";
 import { useCountryStore } from "../store/countryStore";
+import { fetchNearestAmenity } from "../services/nearbyService";
 
 const MAP_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCD1zNC-miAasZEccCH4z-mhNgC3jIFdcwPi-VXxcOv2vfl5PHy43P8bCCan4Km4DHYqIkA8UqI0b-vuwmyiI_jhD1nVss-N4_vIFNsXaokGsOW_Q6GCP-zdWNmhgCxA1oiJUVrsdVJb7d6cvCSiKR2tDBiZh5pvPOlERfgOP_IPniPq_EA8XAk6ONhgkCzVAfYTT-eqgxqMn0DvtnVdXXSrSWcROksJvXd7Skb7fAahwPclg68ZEHsQrUxXfnj5KrVfJ7hhMOvB_V0";
@@ -18,6 +19,89 @@ export default function HomeScreen() {
   const lastKnownLocation = useAppStore((state) => state.lastKnownLocation);
   const countryName = currentCountry?.name || "BIMSTEC";
   const tapStateRef = useRef({ count: 0, resetTimer: null, navTimer: null });
+  const [nearestHospital, setNearestHospital] = useState(null);
+  const [nearestPolice, setNearestPolice] = useState(null);
+  const [placesLoading, setPlacesLoading] = useState(false);
+  const [placesError, setPlacesError] = useState("");
+
+  useEffect(() => {
+    if (!lastKnownLocation) {
+      return;
+    }
+
+    let isActive = true;
+    setPlacesLoading(true);
+    setPlacesError("");
+
+    Promise.all([
+      fetchNearestAmenity({
+        latitude: lastKnownLocation.lat,
+        longitude: lastKnownLocation.lng,
+        amenity: "hospital"
+      }),
+      fetchNearestAmenity({
+        latitude: lastKnownLocation.lat,
+        longitude: lastKnownLocation.lng,
+        amenity: "police"
+      })
+    ])
+      .then(([hospital, police]) => {
+        if (!isActive) {
+          return;
+        }
+
+        setNearestHospital(hospital);
+        setNearestPolice(police);
+      })
+      .catch((error) => {
+        if (!isActive) {
+          return;
+        }
+
+        setPlacesError(error instanceof Error ? error.message : "Unable to load nearby services.");
+        setNearestHospital(null);
+        setNearestPolice(null);
+      })
+      .finally(() => {
+        if (isActive) {
+          setPlacesLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentCountry?.code, lastKnownLocation]);
+
+  const hasLocation = Boolean(lastKnownLocation);
+  const hospitalLabel = !hasLocation
+    ? "Waiting for GPS"
+    : nearestHospital
+      ? `${nearestHospital.name} (${nearestHospital.distanceKm.toFixed(1)}km)`
+      : placesLoading
+        ? "Searching nearby hospitals..."
+        : "No hospital found";
+  const hospitalEta = !hasLocation
+    ? "ENABLE LOCATION"
+    : nearestHospital
+      ? `EST. ${nearestHospital.etaMins} MINS`
+      : placesError
+        ? "CHECK CONNECTION"
+        : "TRY AGAIN";
+  const policeLabel = !hasLocation
+    ? "Waiting for GPS"
+    : nearestPolice
+      ? `${nearestPolice.name} (${nearestPolice.distanceKm.toFixed(1)}km)`
+      : placesLoading
+        ? "Searching nearby stations..."
+        : "No police station found";
+  const policeMeta = !hasLocation
+    ? "ENABLE LOCATION"
+    : nearestPolice
+      ? "DIRECT LINE READY"
+      : placesError
+        ? "CHECK CONNECTION"
+        : "TRY AGAIN";
 
   const mapRegion = useMemo(() => {
     if (!lastKnownLocation) {
@@ -127,10 +211,10 @@ export default function HomeScreen() {
             </View>
             <View style={styles.quickBody}>
               <Text style={styles.quickLabel}>NEAREST HOSPITAL</Text>
-              <Text style={styles.quickValue}>Bangkok Int. (1.2km)</Text>
+              <Text style={styles.quickValue}>{hospitalLabel}</Text>
               <View style={styles.quickMeta}>
                 <MaterialIcons name="navigation" size={14} color={Colors.infoBlue} />
-                <Text style={styles.quickMetaText}>EST. 4 MINS</Text>
+                <Text style={styles.quickMetaText}>{hospitalEta}</Text>
               </View>
             </View>
           </View>
@@ -140,10 +224,10 @@ export default function HomeScreen() {
             </View>
             <View style={styles.quickBody}>
               <Text style={styles.quickLabel}>NEAREST POLICE</Text>
-              <Text style={styles.quickValue}>Station North (2.5km)</Text>
+              <Text style={styles.quickValue}>{policeLabel}</Text>
               <View style={styles.quickMeta}>
                 <MaterialIcons name="call" size={14} color={Colors.tertiary} />
-                <Text style={styles.quickMetaText}>DIRECT LINE READY</Text>
+                <Text style={styles.quickMetaText}>{policeMeta}</Text>
               </View>
             </View>
           </View>
