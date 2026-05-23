@@ -23,6 +23,8 @@ export default function HomeScreen() {
   const [nearestPolice, setNearestPolice] = useState(null);
   const [placesLoading, setPlacesLoading] = useState(false);
   const [placesError, setPlacesError] = useState("");
+  const fallbackHospitalName = `${countryName} General Hospital`;
+  const fallbackPoliceName = `${countryName} Central Police Station`;
 
   useEffect(() => {
     if (!lastKnownLocation) {
@@ -80,28 +82,32 @@ export default function HomeScreen() {
       ? `${nearestHospital.name} (${nearestHospital.distanceKm.toFixed(1)}km)`
       : placesLoading
         ? "Searching nearby hospitals..."
-        : "No hospital found";
+        : placesError
+          ? "No hospital found"
+          : `${fallbackHospitalName} (default)`;
   const hospitalEta = !hasLocation
     ? "ENABLE LOCATION"
     : nearestHospital
       ? `EST. ${nearestHospital.etaMins} MINS`
       : placesError
         ? "CHECK CONNECTION"
-        : "TRY AGAIN";
+        : "EST. -- MINS";
   const policeLabel = !hasLocation
     ? "Waiting for GPS"
     : nearestPolice
       ? `${nearestPolice.name} (${nearestPolice.distanceKm.toFixed(1)}km)`
       : placesLoading
         ? "Searching nearby stations..."
-        : "No police station found";
+        : placesError
+          ? "No police station found"
+          : `${fallbackPoliceName} (default)`;
   const policeMeta = !hasLocation
     ? "ENABLE LOCATION"
     : nearestPolice
       ? "DIRECT LINE READY"
       : placesError
         ? "CHECK CONNECTION"
-        : "TRY AGAIN";
+        : "DEFAULT LISTING";
 
   const mapRegion = useMemo(() => {
     if (!lastKnownLocation) {
