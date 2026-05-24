@@ -42,6 +42,7 @@ export default function TouristEmergencyCardScreen() {
   const [vehicleBrand, setVehicleBrand] = useState("");
   const [requiresSignIn, setRequiresSignIn] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const unsubscribeRef = useRef(null);
 
   const loadProfile = useCallback(async () => {
@@ -61,7 +62,8 @@ export default function TouristEmergencyCardScreen() {
         const localDataStr = await AsyncStorage.getItem("@roadsos_local_profile");
         if (localDataStr) {
           const data = JSON.parse(localDataStr);
-          setName(typeof data.name === "string" ? data.name : "");
+          const hasName = typeof data.name === "string" && data.name.trim().length > 0;
+          setName(hasName ? data.name : "");
           setBloodType(typeof data.bloodType === "string" ? data.bloodType : "");
           setAllergies(
             Array.isArray(data.allergies) && data.allergies.length ? data.allergies : ["None"]
@@ -77,9 +79,18 @@ export default function TouristEmergencyCardScreen() {
           );
           setVehicleType(typeof data.vehicleType === "string" ? data.vehicleType : "");
           setVehicleBrand(typeof data.vehicleBrand === "string" ? data.vehicleBrand : "");
+          
+          if (!hasName) {
+            setIsEditing(true);
+          } else {
+            setIsEditing(false);
+          }
+        } else {
+          setIsEditing(true);
         }
       } catch (e) {
         console.error("Failed to load local profile", e);
+        setIsEditing(true);
       }
       setRequiresSignIn(true);
       setLoading(false);
@@ -91,7 +102,8 @@ export default function TouristEmergencyCardScreen() {
     unsubscribeRef.current = onSnapshot(profileRef, async (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data() || {};
-        setName(typeof data.name === "string" ? data.name : "");
+        const hasName = typeof data.name === "string" && data.name.trim().length > 0;
+        setName(hasName ? data.name : "");
         setBloodType(typeof data.bloodType === "string" ? data.bloodType : "");
         setAllergies(
           Array.isArray(data.allergies) && data.allergies.length ? data.allergies : ["None"]
@@ -107,13 +119,20 @@ export default function TouristEmergencyCardScreen() {
         );
         setVehicleType(typeof data.vehicleType === "string" ? data.vehicleType : "");
         setVehicleBrand(typeof data.vehicleBrand === "string" ? data.vehicleBrand : "");
+        
+        if (!hasName) {
+          setIsEditing(true);
+        } else {
+          setIsEditing(false);
+        }
       } else {
         // Fallback to local profile if Firestore profile is empty
         try {
           const localDataStr = await AsyncStorage.getItem("@roadsos_local_profile");
           if (localDataStr) {
             const data = JSON.parse(localDataStr);
-            setName(typeof data.name === "string" ? data.name : "");
+            const hasName = typeof data.name === "string" && data.name.trim().length > 0;
+            setName(hasName ? data.name : "");
             setBloodType(typeof data.bloodType === "string" ? data.bloodType : "");
             setAllergies(
               Array.isArray(data.allergies) && data.allergies.length ? data.allergies : ["None"]
@@ -129,9 +148,18 @@ export default function TouristEmergencyCardScreen() {
             );
             setVehicleType(typeof data.vehicleType === "string" ? data.vehicleType : "");
             setVehicleBrand(typeof data.vehicleBrand === "string" ? data.vehicleBrand : "");
+            
+            if (!hasName) {
+              setIsEditing(true);
+            } else {
+              setIsEditing(false);
+            }
+          } else {
+            setIsEditing(true);
           }
         } catch (e) {
           console.error("Failed to load local profile fallback", e);
+          setIsEditing(true);
         }
       }
       setRequiresSignIn(false);
@@ -206,6 +234,8 @@ export default function TouristEmergencyCardScreen() {
       }
 
       setSuccessMessage("Profile updated successfully!");
+      setIsEditing(false); // Switch back to View mode and refresh page details
+      
       // Automatically clear success message after 4 seconds
       setTimeout(() => {
         setSuccessMessage("");
@@ -245,8 +275,29 @@ export default function TouristEmergencyCardScreen() {
       </SafeAreaView>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <Text style={styles.headerSubtitle}>Share details to help responders act faster.</Text>
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.headerTitle}>Profile</Text>
+              <Text style={styles.headerSubtitle}>Share details to help responders act faster.</Text>
+            </View>
+            {name && name.trim().length > 0 ? (
+              <Pressable
+                style={[styles.editButton, isEditing && styles.editButtonActive]}
+                onPress={() => {
+                  if (isEditing) {
+                    // Cancel editing - reload original data
+                    void loadProfile();
+                  } else {
+                    setIsEditing(true);
+                  }
+                }}
+              >
+                <Text style={[styles.editButtonText, isEditing && styles.editButtonTextActive]}>
+                  {isEditing ? "Cancel" : "Edit Details"}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         {loading ? (
@@ -258,7 +309,13 @@ export default function TouristEmergencyCardScreen() {
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        {requiresSignIn ? (
+        {successMessage ? (
+          <View style={styles.successCard}>
+            <Text style={styles.successText}>{successMessage}</Text>
+          </View>
+        ) : null}
+
+        {requiresSignIn && !isEditing ? (
           <View style={styles.signInContainer}>
             <Text style={styles.signInLabel}>Sign in to sync your profile to the cloud:</Text>
             <Pressable style={styles.signInButton} onPress={handleGoogleSignIn}>
@@ -271,129 +328,186 @@ export default function TouristEmergencyCardScreen() {
           </View>
         ) : null}
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Full Name</Text>
-          <TextInput value={name} onChangeText={setName} style={styles.input} />
-        </View>
+        {!isEditing ? (
+          // View Mode (Default / Read-only details)
+          <View style={styles.viewContainer}>
+            <View style={styles.infoRow}>
+              <Text style={styles.viewLabel}>Full Name</Text>
+              <Text style={styles.viewValue}>{name || "Not specified"}</Text>
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Blood Type</Text>
-          <View style={styles.pillRow}>
-            {BLOOD_TYPES.map((type) => {
-              const active = bloodType === type;
-              return (
-                <Pressable
-                  key={type}
-                  onPress={() => setBloodType(type)}
-                  style={[styles.pill, active && styles.pillActive]}
-                >
-                  <Text style={[styles.pillText, active && styles.pillTextActive]}>{type}</Text>
-                </Pressable>
-              );
-            })}
+            <View style={styles.infoRow}>
+              <Text style={styles.viewLabel}>Blood Type</Text>
+              {bloodType ? (
+                <View style={[styles.pill, styles.pillActiveReadOnly]}>
+                  <Text style={styles.pillTextActive}>{bloodType}</Text>
+                </View>
+              ) : (
+                <Text style={styles.viewValue}>Not specified</Text>
+              )}
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.viewLabel}>Allergies</Text>
+              <View style={styles.chipRow}>
+                {allergies.map((option) => (
+                  <View key={option} style={[styles.chip, styles.chipActiveReadOnly]}>
+                    <Text style={styles.chipTextActive}>{option}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.viewLabel}>Conditions</Text>
+              <View style={styles.chipRow}>
+                {conditions.map((option) => (
+                  <View key={option} style={[styles.chip, styles.chipActiveReadOnly]}>
+                    <Text style={styles.chipTextActive}>{option}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.viewLabel}>Emergency Contact</Text>
+              <Text style={styles.viewValue}>
+                {emergencyContactName || "Not specified"}
+                {emergencyContactPhone ? ` (${emergencyContactPhone})` : ""}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.viewLabel}>Vehicle Details</Text>
+              <Text style={styles.viewValue}>
+                {vehicleType && vehicleBrand
+                  ? `${vehicleBrand} (${vehicleType})`
+                  : vehicleType || vehicleBrand || "Not specified"}
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : (
+          // Edit Mode
+          <View>
+            <View style={styles.section}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput value={name} onChangeText={setName} style={styles.input} />
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>Allergies</Text>
-          <View style={styles.chipRow}>
-            {ALLERGY_OPTIONS.map((option) => {
-              const active = allergies.includes(option);
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => toggleMulti(option, allergies, setAllergies)}
-                  style={[styles.chip, active && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{option}</Text>
-                </Pressable>
-              );
-            })}
+            <View style={styles.section}>
+              <Text style={styles.label}>Blood Type</Text>
+              <View style={styles.pillRow}>
+                {BLOOD_TYPES.map((type) => {
+                  const active = bloodType === type;
+                  return (
+                    <Pressable
+                      key={type}
+                      onPress={() => setBloodType(type)}
+                      style={[styles.pill, active && styles.pillActive]}
+                    >
+                      <Text style={[styles.pillText, active && styles.pillTextActive]}>{type}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Allergies</Text>
+              <View style={styles.chipRow}>
+                {ALLERGY_OPTIONS.map((option) => {
+                  const active = allergies.includes(option);
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() => toggleMulti(option, allergies, setAllergies)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{option}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Conditions</Text>
+              <View style={styles.chipRow}>
+                {CONDITION_OPTIONS.map((option) => {
+                  const active = conditions.includes(option);
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() => toggleMulti(option, conditions, setConditions)}
+                      style={[styles.chip, active && styles.chipActive]}
+                    >
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{option}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Emergency Contact Name</Text>
+              <TextInput
+                value={emergencyContactName}
+                onChangeText={setEmergencyContactName}
+                style={styles.input}
+              />
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Emergency Contact Phone</Text>
+              <TextInput
+                value={emergencyContactPhone}
+                onChangeText={setEmergencyContactPhone}
+                style={styles.input}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Vehicle Type</Text>
+              <View style={styles.vehicleRow}>
+                {VEHICLE_TYPES.map((type) => {
+                  const active = vehicleType === type;
+                  return (
+                    <Pressable
+                      key={type}
+                      style={[styles.vehicleCard, active && styles.vehicleCardActive]}
+                      onPress={() => setVehicleType(type)}
+                    >
+                      <Text style={[styles.vehicleText, active && styles.vehicleTextActive]}>
+                        {type}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>Vehicle Brand</Text>
+              <TextInput value={vehicleBrand} onChangeText={setVehicleBrand} style={styles.input} />
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.saveButton,
+                pressed && styles.savePressed
+              ]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color={Colors.onPrimary} />
+              ) : (
+                <Text style={styles.saveText}>Save Profile</Text>
+              )}
+            </Pressable>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Conditions</Text>
-          <View style={styles.chipRow}>
-            {CONDITION_OPTIONS.map((option) => {
-              const active = conditions.includes(option);
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => toggleMulti(option, conditions, setConditions)}
-                  style={[styles.chip, active && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{option}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Emergency Contact Name</Text>
-          <TextInput
-            value={emergencyContactName}
-            onChangeText={setEmergencyContactName}
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Emergency Contact Phone</Text>
-          <TextInput
-            value={emergencyContactPhone}
-            onChangeText={setEmergencyContactPhone}
-            style={styles.input}
-            keyboardType="phone-pad"
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Vehicle Type</Text>
-          <View style={styles.vehicleRow}>
-            {VEHICLE_TYPES.map((type) => {
-              const active = vehicleType === type;
-              return (
-                <Pressable
-                  key={type}
-                  style={[styles.vehicleCard, active && styles.vehicleCardActive]}
-                  onPress={() => setVehicleType(type)}
-                >
-                  <Text style={[styles.vehicleText, active && styles.vehicleTextActive]}>
-                    {type}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>Vehicle Brand</Text>
-          <TextInput value={vehicleBrand} onChangeText={setVehicleBrand} style={styles.input} />
-        </View>
-
-        {successMessage ? (
-          <View style={styles.successCard}>
-            <Text style={styles.successText}>{successMessage}</Text>
-          </View>
-        ) : null}
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.saveButton,
-            pressed && styles.savePressed
-          ]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={Colors.onPrimary} />
-          ) : (
-            <Text style={styles.saveText}>Save Profile</Text>
-          )}
-        </Pressable>
+        )}
       </ScrollView>
     </View>
   );
@@ -420,6 +534,12 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     ...Shadows.hard
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: Spacing.sm
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: "800",
@@ -430,6 +550,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: Colors.onSurfaceVariant
+  },
+  editButton: {
+    backgroundColor: Colors.surfaceWhite,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadows.hard
+  },
+  editButtonActive: {
+    backgroundColor: Colors.emergencyRed,
+    borderColor: Colors.onSurface
+  },
+  editButtonText: {
+    color: Colors.onSurface,
+    fontWeight: "800",
+    fontSize: 12
+  },
+  editButtonTextActive: {
+    color: Colors.onPrimary
   },
   loadingRow: {
     marginTop: Spacing.md,
@@ -477,6 +620,44 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: Colors.onSurfaceVariant,
     marginBottom: Spacing.xs
+  },
+  viewContainer: {
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.surfaceWhite,
+    borderWidth: 2,
+    borderColor: Colors.onSurface,
+    borderRadius: Radii.lg,
+    padding: Spacing.md,
+    gap: Spacing.md,
+    ...Shadows.hard
+  },
+  infoRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.surfaceContainer,
+    paddingBottom: Spacing.sm,
+    gap: 4
+  },
+  viewLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: Colors.onSurfaceVariant,
+    textTransform: "uppercase",
+    letterSpacing: 0.8
+  },
+  viewValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.onSurface
+  },
+  pillActiveReadOnly: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+    alignSelf: "flex-start"
+  },
+  chipActiveReadOnly: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+    alignSelf: "flex-start"
   },
   section: {
     marginTop: Spacing.lg,
