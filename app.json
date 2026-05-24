@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "9978dedf-51a9-4e19-9dda-cdb224745b56"
+      }
+    },
+    "android": {
+      "package": "com.prashraysharma.roadsos"
+    }
+  }
+}

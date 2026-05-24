@@ -40,7 +40,9 @@ export default function ResponderAlert({
   incidentLng,
   onDismiss
 }: ResponderAlertProps) {
-  const user = useAuthStore((state) => state.user);
+  const uid = useAuthStore((state) => state.uid);
+  const displayName = useAuthStore((state) => state.displayName);
+  const email = useAuthStore((state) => state.email);
   const pulse = useRef(new Animated.Value(0)).current;
   const loopRef = useRef<Animated.CompositeAnimation | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,12 +71,18 @@ export default function ResponderAlert({
         return;
       }
 
-      const uid = user?.uid || "anonymous";
-      const responderRef = doc(firestore, "incidents", incidentId, "responders", uid);
+      const responderId = uid || "anonymous";
+      const responderRef = doc(
+        firestore,
+        "incidents",
+        incidentId,
+        "responders",
+        responderId
+      );
       const payload = {
-        uid,
-        name: user?.displayName || user?.email || "Responder",
-        isVerified: Boolean((user as { isVerified?: boolean } | null)?.isVerified),
+        uid: responderId,
+        name: displayName || email || "Responder",
+        isVerified: false,
         status,
         distanceMeters: Math.max(0, distanceMeters || 0),
         eta: estimateEta(distanceMeters),
@@ -83,7 +91,7 @@ export default function ResponderAlert({
 
       await setDoc(responderRef, payload, { merge: true });
     },
-    [distanceMeters, incidentId, user]
+    [distanceMeters, displayName, email, incidentId, uid]
   );
 
   const handleGoing = useCallback(async () => {

@@ -1,144 +1,101 @@
-import Constants from "expo-constants";
-import * as Linking from "expo-linking";
+import * as AuthSession from "expo-auth-session";
+import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import {
   GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
+  onAuthStateChanged,
   signInWithCredential,
-  signInWithPhoneNumber,
   signOut as firebaseSignOut,
-  type ConfirmationResult,
-  type UserCredential
+  type User
 } from "firebase/auth";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 
-import { auth } from "../firebase";
-import { useAuthStore } from "../../store/authStore";
-
-const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+import { auth, db } from "./config";
 
 WebBrowser.maybeCompleteAuthSession();
 
+const GOOGLE_SCOPES = ["openid", "profile", "email"];
+
 function getGoogleClientId(): string {
-  const clientId = Constants.expoConfig?.extra?.googleWebClientId || null;
+  const clientId =
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? process.env.GOOGLE_WEB_CLIENT_ID;
   if (!clientId) {
-    throw new Error("Google OAuth client ID missing in Expo config.");
+    throw new Error("GOOGLE_WEB_CLIENT_ID is missing.");
   }
 
   return clientId;
 }
 
 function getRedirectUri(): string {
-  const configured = Constants.expoConfig?.extra?.googleRedirectUri || "";
-  if (configured) {
-    return configured;
-  }
-
-  return Linking.createURL("auth");
+  return AuthSession.makeRedirectUri({ scheme: "roadsos" });
 }
 
-function getAccessTokenFromUrl(url: string): string | null {
-  const hashIndex = url.indexOf("#");
-  if (hashIndex !== -1) {
-    const fragment = url.slice(hashIndex + 1);
-    const params = new URLSearchParams(fragment);
-    const token = params.get("access_token");
-    if (token) {
-      return token;
-    }
-  }
-
-  const queryIndex = url.indexOf("?");
-  if (queryIndex !== -1) {
-    const query = url.slice(queryIndex + 1);
-    const params = new URLSearchParams(query);
-    const token = params.get("access_token");
-    if (token) {
-      return token;
-    }
-  }
-
-  return null;
-}
-
-export async function signInWithGoogle(): Promise<UserCredential> {
-  if (!auth) {
-    throw new Error("Firebase not configured. Set values in apps/mobile/.env.");
-  }
-
+async function requestGoogleIdToken(): Promise<string> {
   const clientId = getGoogleClientId();
   const redirectUri = getRedirectUri();
-  const state = Math.random().toString(36).slice(2);
-
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: "token",
-    scope: "openid profile email",
-    prompt: "select_account",
-    state
+  const request = new AuthSession.AuthRequest({
+    clientId,
+    redirectUri,
+    scopes: GOOGLE_SCOPES,
+    responseType: AuthSession.ResponseType.IdToken,
+    usePKCE: false,
+    extraParams: {
+      nonce: Math.random().toString(36).slice(2)
+    }
   });
 
-  const result = await WebBrowser.openAuthSessionAsync(
-    `${GOOGLE_AUTH_URL}?${params.toString()}`,
-    redirectUri
-  );
+  const result = await request.promptAsync(Google.discovery);
 
-  if (result.type !== "success" || !result.url) {
+  if (result.type !== "success") {
     throw new Error("Google sign-in cancelled.");
   }
 
-  const accessToken = getAccessTokenFromUrl(result.url);
-  if (!accessToken) {
-    throw new Error("Google sign-in failed to return an access token.");
+  const idToken = result.params?.id_token;
+  if (typeof idToken !== "string" || !idToken) {
+    throw new Error("Google sign-in failed to return an ID token.");
   }
 
-  const credential = GoogleAuthProvider.credential(null, accessToken);
-  return signInWithCredential(auth, credential);
+  return idToken;
 }
 
-export async function signInWithEmail(
-  email: string,
-  password: string
-): Promise<UserCredential> {
-  if (!auth) {
-    throw new Error("Firebase not configured. Set values in apps/mobile/.env.");
+async function ensureUserDocument(user: User): Promise<boolean> {
+  const userRef = doc(db, "users", user.uid);
+  const snapshot = await getDoc(userRef);
+
+  if (!snapshot.exists()) {
+    await setDoc(userRef, {
+      uid: user.uid,
+      displayName: user.displayName ?? null,
+      email: user.email ?? null,
+      photoURL: user.photoURL ?? null,
+      createdAt: serverTimestamp(),
+      onboardingComplete: false
+    });
+    return false;
   }
 
-  return signInWithEmailAndPassword(auth, email, password);
+  const data = snapshot.data();
+  return Boolean(data?.onboardingComplete);
 }
 
-export async function signUpWithEmail(
-  email: string,
-  password: string
-): Promise<UserCredential> {
-  if (!auth) {
-    throw new Error("Firebase not configured. Set values in apps/mobile/.env.");
-  }
+export async function signInWithGoogle(): Promise<{
+  uid: string;
+  onboardingComplete: boolean;
+}> {
+  const idToken = await requestGoogleIdToken();
+  const credential = GoogleAuthProvider.credential(idToken);
+  const result = await signInWithCredential(auth, credential);
+  const onboardingComplete = await ensureUserDocument(result.user);
 
-  return createUserWithEmailAndPassword(auth, email, password);
+  return { uid: result.user.uid, onboardingComplete };
 }
 
-export async function signInWithPhone(phone: string): Promise<ConfirmationResult> {
-  if (!auth) {
-    throw new Error("Firebase not configured. Set values in apps/mobile/.env.");
-  }
-
-  return signInWithPhoneNumber(auth, phone);
-}
-
-export async function verifyOTP(
-  confirmation: ConfirmationResult,
-  otp: string
-): Promise<UserCredential> {
-  return confirmation.confirm(otp);
-}
-
-export async function signOut(): Promise<void> {
-  if (!auth) {
-    return;
-  }
-
+export async function logOut(): Promise<void> {
   await firebaseSignOut(auth);
-  useAuthStore.getState().clearAuth();
+}
+
+export function subscribeToAuth(cb: (uid: string | null) => void) {
+  return onAuthStateChanged(auth, (user) => {
+    cb(user ? user.uid : null);
+  });
 }

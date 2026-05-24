@@ -10,6 +10,24 @@
     },
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "extra": {
+      "firebase": {
+        "apiKey": "AIzaSyAEphv46R3_yjHRho6Fii8Nm_Mq5Ss93zk",
+        "authDomain": "roadsos-svvv.firebaseapp.com",
+        "projectId": "roadsos-svvv",
+        "storageBucket": "roadsos-svvv.firebasestorage.app",
+        "messagingSenderId": "828177638739",
+        "appId": "1:828177638739:web:1c207c8f5ec44cf661ada6",
+        "measurementId": "G-B50W54W5WY"
+      },
+      "geminiApiKey": "AIzaSyCWbUIyQuCgy3ZMUAJWACkMJ8dhspnb-vc",
+      "googleMapsApiKey": "",
+      "googleWebClientId": "828177638739-frjjmmod3ivn5geuv05ug0jmfkusgmi5.apps.googleusercontent.com",
+      "googleRedirectUri": "https://auth.expo.io/@prashraysharma/roadsos",
+      "eas": {
+        "projectId": "9978dedf-51a9-4e19-9dda-cdb224745b56"
+      }
+    }
   }
 }

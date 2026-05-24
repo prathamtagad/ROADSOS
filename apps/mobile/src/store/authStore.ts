@@ -1,28 +1,43 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-import type { User as FirebaseUser } from "firebase/auth";
+
+type AuthUser = {
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+};
 
 type AuthState = {
-  user: FirebaseUser | null;
+  uid: string | null;
+  displayName: string | null;
+  email: string | null;
   isOnboarded: boolean;
-  setUser: (user: FirebaseUser | null) => void;
+  isLoading: boolean;
+  setUser: (user: AuthUser | null) => void;
   setOnboarded: (value: boolean) => void;
+  setLoading: (value: boolean) => void;
   clearAuth: () => void;
 };
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isOnboarded: false,
-      setUser: (user) => set({ user }),
-      setOnboarded: (value) => set({ isOnboarded: value }),
-      clearAuth: () => set({ user: null, isOnboarded: false })
+export const useAuthStore = create<AuthState>((set) => ({
+  uid: null,
+  displayName: null,
+  email: null,
+  isOnboarded: false,
+  isLoading: true,
+  setUser: (user) =>
+    set({
+      uid: user?.uid ?? null,
+      displayName: user?.displayName ?? null,
+      email: user?.email ?? null
     }),
-    {
-      name: "roadsos-auth",
-      storage: createJSONStorage(() => AsyncStorage)
-    }
-  )
-);
+  setOnboarded: (value) => set({ isOnboarded: value }),
+  setLoading: (value) => set({ isLoading: value }),
+  clearAuth: () =>
+    set({
+      uid: null,
+      displayName: null,
+      email: null,
+      isOnboarded: false,
+      isLoading: false
+    })
+}));

@@ -1,6 +1,8 @@
 import path from "path";
 import { config as dotenvConfig } from "dotenv";
 
+const withAndroidGradleProps = require("./plugins/withAndroidGradleProps");
+
 dotenvConfig({ path: path.join(__dirname, ".env") });
 
 export default ({ config }) => ({
@@ -8,6 +10,21 @@ export default ({ config }) => ({
   name: "ROADSOS",
   slug: "roadsos",
   scheme: "roadsos",
+  plugins: [
+    ...(config.plugins || []),
+    [
+      "expo-build-properties",
+      {
+        android: {
+          compileSdkVersion: 34,
+          targetSdkVersion: 34,
+          minSdkVersion: 24,
+          kotlinVersion: "1.9.24"
+        }
+      }
+    ],
+    withAndroidGradleProps
+  ],
   android: {
     package: "com.roadsos",
     googleServicesFile: "./google-services.json",
@@ -23,6 +40,9 @@ export default ({ config }) => ({
     }
   },
   extra: {
+    eas: {
+      projectId: "9978dedf-51a9-4e19-9dda-cdb224745b56"
+    },
     firebase: {
       apiKey: process.env.FIREBASE_API_KEY || "",
       authDomain: process.env.FIREBASE_AUTH_DOMAIN || "",

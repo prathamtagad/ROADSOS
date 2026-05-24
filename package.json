@@ -11,6 +11,7 @@
     "android": "npm --prefix apps/mobile run android",
     "ios": "npm --prefix apps/mobile run ios",
     "web": "npm --prefix apps/mobile run web",
+    "eas:android:dev": "npm --prefix apps/mobile run eas:android:dev",
     "lint": "npm --prefix apps/mobile run lint && npm --prefix firebase run lint",
     "emulators": "npm --prefix firebase run emulators",
     "functions:serve": "npm --prefix firebase run serve",
@@ -18,6 +19,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
+    "expo-dev-client": "~4.0.29",
     "react-dom": "18.2.0",
     "react-native-web": "~0.19.10"
   }

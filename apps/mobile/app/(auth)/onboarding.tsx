@@ -5,11 +5,13 @@ import {
   TextInput,
   ScrollView,
   Pressable,
-  StyleSheet
+  StyleSheet,
+  ActivityIndicator
 } from "react-native";
-import { doc, updateDoc } from "firebase/firestore";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 
-import { firestore } from "../../src/lib/firebase";
+import { db } from "../../src/lib/firebase/config";
 import { useAuthStore } from "../../src/store/authStore";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
@@ -22,7 +24,7 @@ const VEHICLE_TYPES = [
 ];
 
 export default function OnboardingScreen() {
-  const user = useAuthStore((state) => state.user);
+  const uid = useAuthStore((state) => state.uid);
   const setOnboarded = useAuthStore((state) => state.setOnboarded);
 
   const [name, setName] = useState("");
@@ -74,7 +76,7 @@ export default function OnboardingScreen() {
   };
 
   const handleSave = async () => {
-    if (!user || !firestore) {
+    if (!uid) {
       setError("Sign in required to continue.");
       return;
     }
@@ -92,10 +94,11 @@ export default function OnboardingScreen() {
         emergencyContactPhone,
         vehicleType,
         vehicleBrand,
-        onboardingComplete: true
+        onboardingComplete: true,
+        updatedAt: serverTimestamp()
       };
 
-      await updateDoc(doc(firestore, "users", user.uid), payload);
+      await updateDoc(doc(db, "users", uid), payload);
       setOnboarded(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save details.");
@@ -105,9 +108,10 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Tell us about you</Text>
-      <Text style={styles.subtitle}>We use this to help responders act faster.</Text>
+    <SafeAreaView style={styles.screen}>
+      <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Set up your profile</Text>
+        <Text style={styles.subtitle}>We use this to help responders act faster.</Text>
 
       <View style={styles.fieldBlock}>
         <Text style={styles.label}>Full Name</Text>
@@ -179,7 +183,7 @@ export default function OnboardingScreen() {
           value={emergencyContactPhone}
           onChangeText={setEmergencyContactPhone}
           style={styles.input}
-          keyboardType="phone-pad"
+          keyboardType="numeric"
         />
       </View>
 
@@ -211,16 +215,21 @@ export default function OnboardingScreen() {
         </View>
       ) : null}
 
-      <Pressable
-        style={({ pressed }) => [styles.saveButton, pressed && styles.savePressed]}
-        onPress={handleSave}
-        disabled={!canSave || saving}
-      >
-        <Text style={styles.saveText}>{saving ? "Saving..." : "Save"}</Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.saveButton, pressed && styles.savePressed]}
+          onPress={handleSave}
+          disabled={!canSave || saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#0a0a1a" />
+          ) : (
+            <Text style={styles.saveText}>Save</Text>
+          )}
+        </Pressable>
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </ScrollView>
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -236,8 +245,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#f3f4ff",
-    fontSize: 28,
-    fontWeight: "800"
+    fontSize: 24,
+    fontWeight: "700"
   },
   subtitle: {
     color: "#9ca3af",
@@ -325,7 +334,6 @@ const styles = StyleSheet.create({
     gap: 8
   },
   vehicleCardActive: {
-    backgroundColor: "#e94560",
     borderColor: "#e94560"
   },
   vehicleIcon: {
@@ -336,7 +344,7 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   vehicleTextActive: {
-    color: "#0a0a1a"
+    color: "#e94560"
   },
   saveButton: {
     marginTop: 10,
@@ -354,7 +362,7 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   errorText: {
-    color: "#f87171",
+    color: "#e94560",
     fontWeight: "600"
   }
 });
