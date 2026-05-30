@@ -2,6 +2,7 @@
   "expo": {
     "name": "ROADSOS",
     "slug": "roadsos",
+    "owner": "prashraysharma",
     "scheme": "roadsos",
     "orientation": "portrait",
     "userInterfaceStyle": "light",

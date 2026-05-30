@@ -27,12 +27,14 @@ function getGoogleClientId(): string {
 }
 
 function getRedirectUri(): string {
-  return AuthSession.makeRedirectUri({ scheme: "roadsos" });
+  return AuthSession.makeRedirectUri({ useProxy: true } as any);
 }
 
 async function requestGoogleIdToken(): Promise<string> {
   const clientId = getGoogleClientId();
   const redirectUri = getRedirectUri();
+  console.log("[GoogleAuth] redirectUri =", redirectUri);
+  console.log("[GoogleAuth] clientId =", clientId);
   const request = new AuthSession.AuthRequest({
     clientId,
     redirectUri,
@@ -44,7 +46,9 @@ async function requestGoogleIdToken(): Promise<string> {
     }
   });
 
-  const result = await request.promptAsync(Google.discovery);
+  const result = await request.promptAsync(Google.discovery, {
+    useProxy: true
+  } as any);
 
   if (result.type !== "success") {
     throw new Error("Google sign-in cancelled.");
