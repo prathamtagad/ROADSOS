@@ -3,6 +3,7 @@
     "name": "ROADSOS",
     "slug": "roadsos",
     "owner": "prashraysharma",
+    "version": "1.0.0",
     "scheme": "roadsos",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -11,6 +12,38 @@
     },
     "assetBundlePatterns": [
       "**/*"
+    ],
+    "android": {
+      "package": "com.alphabuild.roadsos",
+      "versionCode": 1,
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "minSdkVersion": 23,
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow ROADSOS to use your location for emergency response."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#E94560"
+        }
+      ]
     ],
     "extra": {
       "eas": {

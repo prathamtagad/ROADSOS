@@ -15,7 +15,7 @@ type CountryState = {
 export const useCountryStore = create<CountryState>()(
   persist(
     (set, get) => ({
-      currentCountryCode: "TH",
+      currentCountryCode: "IN",
       isManualOverride: false,
       setCountry: (code) =>
         set({ currentCountryCode: code.toUpperCase(), isManualOverride: true }),
