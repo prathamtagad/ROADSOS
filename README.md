@@ -11,13 +11,13 @@
 
 ## 🌍 The BIMSTEC Road Safety Crisis Solved
 
-ROADSOS is an emergency response and road assistance platform built specifically for the BIMSTEC region's realities: motorcycle-dominated roads, mountain terrain, cross-border movement, multiple messenger ecosystems, and connectivity gaps. 
+ROADSOS is an emergency response and road assistance platform built for real-world road safety challenges: motorcycle-dominated roads, mountain terrain, cross-border movement, multiple messenger ecosystems, and connectivity gaps.
 
-It is the first emergency system that is **country-aware** — automatically switching emergency contacts, databases, language, and communication channels the moment a user crosses a border (Thailand, Myanmar, Sri Lanka, Nepal, Bangladesh, Bhutan).
+It is the first emergency system that is **country-aware** — automatically switching emergency contacts, databases, language, and communication channels the moment a user crosses a border. Default country: **India 🇮🇳**. Supports **15 countries** across the BIMSTEC region and globally.
 
 ## ✨ Key Features
 
-*   🗺️ **BIMSTEC Smart Border Mode:** Silently reconfigures all contacts, databases, and languages via GPS when crossing borders.
+*   🗺️ **Smart Border Mode:** Silently reconfigures all contacts, databases, and languages via GPS when crossing borders. Supports 7 BIMSTEC + 8 global countries.
 *   📡 **100% Offline Mode:** Pre-cached emergency numbers, hospitals, towing, tyre shops, and first aid guidance for zero-connectivity areas.
 *   🏍️ **Motorcycle First & Mountain Rescue:** Specialized TFLite crash detection for two-wheelers and altitude-aware emergency features (LZ finder, offline SOS).
 *   🤖 **AI First Aid & Messenger Bots:** Gemini-powered first aid guidance and country-specific bot integrations (LINE, WhatsApp, Messenger).
@@ -94,10 +94,36 @@ This project is organized as a monorepo:
 *   **`firebase/`**: Firebase Cloud Functions, Security Rules, and Emulator configurations.
 *   **`ROADSOS_PRD_BIMSTEC_v4.md`**: The complete Product Requirements Document detailing the system architecture and features.
 
+## 🌐 Supported Countries
+
+### BIMSTEC Region (Default)
+| Flag | Country | Dial Code | Ambulance | Police | Fire |
+|------|---------|-----------|-----------|--------|------|
+| 🇮🇳 | **India (Default)** | +91 | 108 | 100 | 101 |
+| 🇹🇭 | Thailand | +66 | 1669 | 191 | 199 |
+| 🇲🇲 | Myanmar | +95 | 192 | 199 | 191 |
+| 🇱🇰 | Sri Lanka | +94 | 1990 | 118 | 110 |
+| 🇳🇵 | Nepal | +977 | 102 | 100 | 101 |
+| 🇧🇩 | Bangladesh | +880 | 199 | 999 | 199 |
+| 🇧🇹 | Bhutan | +975 | 112 | 110 | 110 |
+
+### Global
+| Flag | Country | Dial Code | Emergency |
+|------|---------|-----------|----------|
+| 🇺🇸 | United States | +1 | 911 |
+| 🇬🇧 | United Kingdom | +44 | 999 |
+| 🇦🇺 | Australia | +61 | 000 |
+| 🇸🇬 | Singapore | +65 | 995 / 999 |
+| 🇲🇾 | Malaysia | +60 | 999 |
+| 🇦🇪 | UAE | +971 | 998 / 999 |
+| 🇩🇪 | Germany | +49 | 112 |
+| 🇯🇵 | Japan | +81 | 119 / 110 |
+
 ## 💡 Notes
 
 *   The HTML UI files in the workspace root are design references and prototypes.
 *   The application is designed to operate primarily on free-tier services (Firebase, Google AI Studio) to ensure sustainability during pilot phases.
+*   The country selector includes a **search bar** and groups countries into BIMSTEC and Global sections.
 
 ---
 *Built for the Road Safety Hackathon 2026*
