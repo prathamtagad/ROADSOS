@@ -47,8 +47,34 @@ It is the first emergency system that is **country-aware** — automatically swi
     ```
 
 2.  **Environment Variables**
-    Environment variables are managed locally. Ensure you have your `.env` configured in `apps/mobile/.env` with your Firebase and API credentials.
+    Environment variables are managed locally. Create a `.env` file in `apps/mobile/.env` and add the following keys. 
     *(Secrets are securely injected at runtime via `app.config.js` and ignored by Git).*
+
+    ```env
+    # Firebase
+    FIREBASE_API_KEY=
+    FIREBASE_AUTH_DOMAIN=
+    FIREBASE_PROJECT_ID=
+    FIREBASE_STORAGE_BUCKET=
+    FIREBASE_MESSAGING_SENDER_ID=
+    FIREBASE_APP_ID=1:
+    FIREBASE_MEASUREMENT_ID=G-
+
+    # Firebase (runtime)
+    EXPO_PUBLIC_FIREBASE_API_KEY=
+    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
+    EXPO_PUBLIC_FIREBASE_PROJECT_ID=
+    EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
+    EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+    EXPO_PUBLIC_FIREBASE_APP_ID=1:
+    EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=
+
+    # APIs
+    GEMINI_API_KEY=
+    GOOGLE_WEB_CLIENT_ID=
+    GOOGLE_REDIRECT_URI=
+    EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
+    ```
 
 3.  **Start the Mobile App**
     ```bash
